@@ -23,20 +23,3 @@ class LinkedProductLine(models.Model):
         }
         return res
 
-    # @api.onchange('is_starting_fees')
-    # def _onchange_starting_fees(self):
-    #     if self.product_id.is_starting_fees:
-    #         raise ValidationError('Starting Fees Already Selected.')
-
-    # @api.constrains('is_starting_fees')
-    # def staring_fees_check(self):
-    #     """
-    #     Check starting Fees
-    #     """
-    #     if self.search_count([('is_starting_fees', '=', True)]) > 1:
-    #         raise ValidationError('Starting Fees Already Selected.')
-    #
-    # @api.onchange('is_starting_fees')
-    # def make_abo(self):
-    #     if self.is_starting_fees:
-    #         self.is_abo_product = False

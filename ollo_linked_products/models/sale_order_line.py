@@ -43,8 +43,6 @@ class SaleOrderLine(models.Model):
                 'is_starting_fees': True,
             })
             res.starting_fees_line_id = line_id.id
-            if not res.order_id.recurrence_id and res.product_id.recurring_invoice:
-                res.order_id.recurrence_id = self.env.ref('sale_temporal.recurrence_monthly').id
         return res
 
     def write(self, vals):
@@ -67,8 +65,6 @@ class SaleOrderLine(models.Model):
                             'is_starting_fees': True,
                         })
                         rec.starting_fees_line_id = line_id.id
-                if not rec.order_id.recurrence_id and rec.product_id.recurring_invoice:
-                    rec.order_id.recurrence_id = self.env.ref('sale_temporal.recurrence_monthly').id
         return res
 
     def unlink(self):
