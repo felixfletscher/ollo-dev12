@@ -16,7 +16,6 @@ class SaleOrderLine(models.Model):
     def _is_not_sellable_line(self):
         return self.is_starting_fees or super(SaleOrderLine, self)._is_not_sellable_line()
 
-
     @api.depends('product_id.display_name')
     def _compute_name_short(self):
         """ If the sale order line concerns a ticket, we don't want the product name, but the ticket name instead.
@@ -26,7 +25,6 @@ class SaleOrderLine(models.Model):
         for record in self:
             if record.is_starting_fees:
                 record.name_short = record.name
-
 
     @api.model_create_multi
     def create(self, vals):
@@ -53,7 +51,7 @@ class SaleOrderLine(models.Model):
         if 'product_uom_qty' in vals:
             for rec in self:
                 pact = self.env['product.product'].sudo().browse(rec.product_id.id)
-                for linked_product in pact.linked_product_line.filtered(lambda x:x.is_starting_fees):
+                for linked_product in pact.linked_product_line.filtered(lambda x: x.is_starting_fees):
                     if rec.starting_fees_line_id:
                         rec.starting_fees_line_id.product_uom_qty = linked_product.product_qty * rec.product_uom_qty
                     else:

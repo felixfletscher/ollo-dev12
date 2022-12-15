@@ -8,3 +8,6 @@ class ResPartner(models.Model):
 
     mollie_contact_id = fields.Char(string='Mollie Contact')
     mollie_mandate_id = fields.Char(string='Mollie Mandate')
+
+    def action_get_mollib_info(self):
+        pass

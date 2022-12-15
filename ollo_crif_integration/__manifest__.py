@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Ollo Linked Products",
+    'name': "Ollo CRIF Integration",
     'summary': """
-       Ollo Linked Products""",
+        Ollo CRIF Integration""",
     'description': """
-       Ollo Linked Products
+        Ollo CRIF Integration
     """,
     'category': 'Customizations',
     'support': 'felix@fletscher.de',
     'website': 'https://www.fletscher.de',
-    'version': '16.0.0.0.2',
+    'version': '16.0.0.0.1',
     'images': ['static/description/icon.png'],
-    'depends': ['sale_management','stock','sale_subscription','website_sale'],
+    'depends': ['ollo_linked_products'],
     'data': [
         'security/ir.model.access.csv',
-        'views/product_template_views.xml',
-        'views/template.xml',
+        'views/sale_order_views.xml',
+        'views/res_partner_views.xml',
     ],
     'installable': True,
     'application': True,

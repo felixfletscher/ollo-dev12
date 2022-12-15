@@ -3,6 +3,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
+
 class LinkedProductLine(models.Model):
     _name = 'linked.product.line'
     _description = 'Linked Product Line'
@@ -22,4 +23,3 @@ class LinkedProductLine(models.Model):
             }
         }
         return res
-
