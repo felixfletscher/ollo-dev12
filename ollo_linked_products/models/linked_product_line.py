@@ -9,8 +9,12 @@ class LinkedProductLine(models.Model):
     _description = 'Linked Product Line'
 
     product_linked = fields.Many2one('product.template', string='Produkt')
+    product_template_id = fields.Many2one(
+        'product.template', string='Produkt',
+        related='product_id.product_tmpl_id', store=True
+    )
     product_qty = fields.Integer('Menge', default=1)
-    product_id = fields.Many2one('product.template', string='Produkt Template')
+    product_id = fields.Many2one('product.product', string='Produkt Template')
     product_variant_id = fields.Many2one('product.product', string='Produkt Variant')
     is_abo_product = fields.Boolean(string='Is abo Product?')
     is_starting_fees = fields.Boolean(string='Is starting Fees?')

@@ -4,8 +4,8 @@
          <!-- inherit product template form View -->
         <record id="product_template_form_view_inherit_ollo_linked_product" model="ir.ui.view">
             <field name="name">product.template.inherit</field>
-            <field name="model">product.template</field>
-            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view"/>
             <field name="arch" type="xml">
                 <xpath expr="//notebook" position="inside">
                     <page string="Verlinkte Produkte" name="linked_products">
