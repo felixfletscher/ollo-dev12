@@ -1,0 +1,52 @@
+<odoo>
+
+    <record id="molliesubscriptions_payment_refund_view_form" model="ir.ui.view">
+        <field name="name">molliesubscriptions.payment.refund.view.form</field>
+        <field name="model">molliesubscriptions.payment.refund</field>
+        <field name="arch" type="xml">
+            <form edit="0" create="1" delete="0">
+                <header>
+                    <button name="create_payment_refund" type="object" string="Create Payment Refund"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="payment_id"></field>
+                        <field name="refund_id"></field>
+                        <field name="amount_value"></field>
+                        <field name="amount_currency"></field>
+                        <field name="status"></field>
+                        <field name="created_at"></field>
+                        <field name="description"></field>
+                        <field name="settlement_amount_value"></field>
+                        <field name="settlement_amount_currency"></field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="molliesubscriptions_payment_refund_view_tree" model="ir.ui.view">
+        <field name="name">molliesubscriptions.payment.refund.view.tree</field>
+        <field name="model">molliesubscriptions.payment.refund</field>
+        <field name="arch" type="xml">
+            <tree string="Payment Tree View">
+                <field name="payment_id"></field>
+                <field name="refund_id"></field>
+                <field name="amount_value"></field>
+                <field name="amount_currency"></field>
+                <field name="status"></field>
+                <field name="created_at"></field>
+                <field name="description"></field>
+                <field name="settlement_amount_value"></field>
+                <field name="settlement_amount_currency"></field>
+            </tree>
+        </field>
+    </record>
+
+    <record id="molliesubscriptions_payment_refund_menu_action" model="ir.actions.act_window">
+        <field name="name">Refunds</field>
+        <field name="res_model">molliesubscriptions.payment.refund</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

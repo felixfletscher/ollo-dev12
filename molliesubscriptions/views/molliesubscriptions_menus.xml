@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="root_menu" name="Mollie Subscriptions" web_icon="molliesubscriptions,static/description/icon.png" sequence="0">
+        <menuitem id="molliesubscriptions_subscription_menu" name="Subscriptions" action="molliesubscriptions_subscription_menu_action" sequence="1"></menuitem>
+        <menuitem id="molliesubscruption_payment_root" name="Payments" sequence="2">
+            <menuitem id="molliesubscriptions_payment_menu" name="Payments" action="molliesubscriptions_payment_menu_action" sequence="1"></menuitem>
+            <menuitem id="molliesubscriptions_payment_refund_menu" name="Payment Refunds" action="molliesubscriptions_payment_refund_menu_action" sequence="2"></menuitem>
+        </menuitem> 
+    </menuitem>
+</odoo>

@@ -1,0 +1,74 @@
+<odoo>
+
+    <record id="molliesubscriptions_payment_view_form" model="ir.ui.view">
+        <field name="name">molliesubscriptions.payment.view.form</field>
+        <field name="model">molliesubscriptions.payment</field>
+        <field name="arch" type="xml">
+            <form edit="0" create="0" delete="0">
+                <header>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="subscription_id"></field>
+                            <field name="payment_id"></field>
+                            <field name="created_at"></field>
+                            <field name="amount_value"></field>
+                            <field name="amount_currency"></field>
+                            <field name="method"></field>
+                            <field name="status"></field>
+                            <field name="paid_at"></field>
+                            <field name="amount_refunded_value"></field>
+                            <field name="amount_refunded_currency"></field>
+                        </group>
+                        <group>
+                            <field name="amount_remaining_value"></field>
+                            <field name="amount_remaining_currency"></field>
+                            <field name="locale"></field>
+                            <field name="mandate_id"></field>
+                            <field name="sequence_type"></field>
+                            <field name="settlement_amount_value"></field>
+                            <field name="settlement_amount_currency"></field>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="refund_ids"></field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="molliesubscriptions_payment_view_tree" model="ir.ui.view">
+        <field name="name">molliesubscriptions.payment.view.tree</field>
+        <field name="model">molliesubscriptions.payment</field>
+        <field name="arch" type="xml">
+            <tree string="Payment Tree View">
+                <field name="subscription_id"></field>
+                <field name="payment_id"></field>
+                <field name="created_at"></field>
+                <field name="amount_value"></field>
+                <field name="amount_currency"></field>
+                <field name="method"></field>
+                <field name="status"></field>
+                <field name="paid_at"></field>
+                <field name="amount_refunded_value"></field>
+                <field name="amount_refunded_currency"></field>
+                <field name="amount_remaining_value"></field>
+                <field name="amount_remaining_currency"></field>
+                <field name="locale"></field>
+                <field name="mandate_id"></field>
+                <field name="sequence_type"></field>
+                <field name="settlement_amount_value"></field>
+                <field name="settlement_amount_currency"></field>
+            </tree>
+        </field>
+    </record>
+
+    <record id="molliesubscriptions_payment_menu_action" model="ir.actions.act_window">
+        <field name="name">Payments</field>
+        <field name="res_model">molliesubscriptions.payment</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>

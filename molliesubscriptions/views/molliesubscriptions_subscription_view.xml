@@ -1,0 +1,76 @@
+<odoo>
+
+    <record id="molliesubscriptions_subscription_view_form" model="ir.ui.view">
+        <field name="name">molliesubscriptions.subscription.view.form</field>
+        <field name="model">molliesubscriptions.subscription</field>
+        <field name="arch" type="xml">
+            <form edit="1" create="1" delete="1">
+                <header>
+                    <button name="create_subscription" type="object" string="Create Subscription"/>
+                    <button name="update_subscription_data" type="object" string="Update Subscription Data"/>
+                    <button name="update_subscription" type="object" string="Update Subscription"/>
+                    <button name="cancel_subscription" type="object" string="Cancel Subscription"/>
+                    <button name="update_payments" type="object" string="Update Payments"/>
+                    <button name="update_payment_method" type="object" string="Update Payment Method"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Active" bg_color="bg-success" attrs="{'invisible': [('status', '!=', 'active')]}"/>
+                    <widget name="web_ribbon" title="Canceled" bg_color="bg-danger" attrs="{'invisible': [('status', '!=', 'canceled')]}"/>
+                    <group>
+                        <group>
+                            <field name="customer_id"></field>
+                            <field name="value"></field>
+                            <field name="interval"></field>
+                            <field name="description"></field>
+                            <field name="start_date"></field>
+                        </group>
+                        <group>
+                            <field name="subscription_id"></field>
+                            <field name="status"></field>
+                            <field name="next_payment_date"></field>
+                            <field name="mollie_created_at"></field>
+                            <field name="mollie_canceled_at"></field>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="payment_ids" string="Payments">
+                            <tree>
+                                <field name="payment_id"></field>
+                                <field name="created_at"></field>
+                                <field name="amount_value"></field>
+                                <field name="amount_currency"></field>
+                                <field name="method"></field>
+                                <field name="status"></field>
+                                <field name="paid_at"></field>
+                            </tree>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="molliesubscriptions_subscription_view_tree" model="ir.ui.view">
+        <field name="name">molliesubscriptions.subscription.view.tree</field>
+        <field name="model">molliesubscriptions.subscription</field>
+        <field name="arch" type="xml">
+            <tree string="Subscription Tree View">
+                <field name="subscription_id"></field>
+                <field name="status"></field>
+                <field name="next_payment_date"></field>
+                <field name="customer_id"></field>
+                <field name="value" widget="badge"></field>
+                <field name="interval"></field>
+                <field name="description"></field>
+                <field name="start_date"></field>
+            </tree>
+        </field>
+    </record>
+
+    <record id="molliesubscriptions_subscription_menu_action" model="ir.actions.act_window">
+        <field name="name">Subscriptions</field>
+        <field name="res_model">molliesubscriptions.subscription</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+</odoo>
