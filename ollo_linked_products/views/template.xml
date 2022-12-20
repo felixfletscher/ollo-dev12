@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="cart_lines" inherit_id="website_sale.cart_lines" name="Shopping Cart Lines">
+        <xpath expr="//table//td[hasclass('td-action')]" position="replace">
+            <td class="td-action">
+                <a t-if="not line._is_not_sellable_line()" href='#' aria-label="Remove from cart"
+                   title="Remove from cart" class='js_delete_product no-decoration'>
+                    <small>
+                        <i class='fa fa-trash-o'></i>
+                    </small>
+                </a>
+            </td>
+        </xpath>
+    </template>
+</odoo>

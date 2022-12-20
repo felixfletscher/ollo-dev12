@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit res partner form View -->
+        <record id="base_view_partner_form_inherit_ollo_crif" model="ir.ui.view">
+            <field name="name">res.partner.inherit.form</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='function']" position="before">
+                    <field name="mollie_contact_id"/>
+                    <field name="mollie_mandate_id"/>
+                </xpath>
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="action_get_mollib_info" type="object" string="Get Mollib Information"
+                            icon="fa-info-circle" class="btn btn-primary"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

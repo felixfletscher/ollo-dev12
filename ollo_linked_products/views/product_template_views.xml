@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+         <!-- inherit product template form View -->
+        <record id="product_template_form_view_inherit_ollo_linked_product" model="ir.ui.view">
+            <field name="name">product.template.inherit</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="Verlinkte Produkte" name="linked_products">
+                        <field name="linked_product_line">
+                            <tree editable="bottom">
+                                <field name="product_linked"/>
+                                <field name="is_abo_product"/>
+                                <field name="is_starting_fees" attrs="{'invisible': [('is_abo_product','=', True)]}"/>
+                                <field name="product_variant_id"/>
+                                <field name="product_qty"/>
+                            </tree>
+                        </field>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
