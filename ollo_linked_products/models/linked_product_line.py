@@ -10,7 +10,7 @@ class LinkedProductLine(models.Model):
 
     product_linked = fields.Many2one('product.template', string='Produkt')
     product_template_id = fields.Many2one(
-        'product.template', string='Produkt Template',
+        'product.template', string='Produkt Template.',
         related='product_id.product_tmpl_id', store=True
     )
     product_qty = fields.Integer('Menge', default=1)

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Add demo data in config parameter-->
+        <record id="mollie_interval_1month" model="mollie.interval">
+            <field name="name">1</field>
+            <field name="interval_type">months</field>
+        </record>
+    </data>
+</odoo>

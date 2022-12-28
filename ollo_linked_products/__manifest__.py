@@ -9,7 +9,7 @@
     'category': 'Customizations',
     'support': 'felix@fletscher.de',
     'website': 'https://www.fletscher.de',
-    'version': '16.0.0.0.4',
+    'version': '16.0.0.0.2',
     'images': ['static/description/icon.png'],
     'depends': ['sale_management','stock','sale_subscription','website_sale'],
     'data': [

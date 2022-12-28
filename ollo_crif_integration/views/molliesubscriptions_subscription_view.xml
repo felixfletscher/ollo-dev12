@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit res partner form View -->
+        <record id="molliesubscriptions_subscription_view_form_inherit" model="ir.ui.view">
+            <field name="name">molliesubscriptions.subscription.view.form.inherit</field>
+            <field name="model">molliesubscriptions.subscription</field>
+            <field name="inherit_id" ref="molliesubscriptions.molliesubscriptions_subscription_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='customer_id']" position="before">
+                    <field name="partner_id"/>
+                </xpath>
+                <xpath expr="//field[@name='interval']" position="replace">
+                    <field name="interval_id" widget="selection" string="Interval"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

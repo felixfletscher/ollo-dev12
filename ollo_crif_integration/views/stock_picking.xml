@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Inherit Stock picking form view -->
+        <record id="stock_picking_inherit_ollo_crif" model="ir.ui.view">
+            <field name="name">stock.picking.inherit</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <field name="is_abo_picking" invisible="1"/>
+                    <field name="is_subscription_created" invisible="1"/>
+                    <button name="action_create_subscription" type="object" string="Create Subscription"
+                            class="btn btn-primary"
+                            attrs="{'invisible': ['|','|',('is_abo_picking', '!=', True),('state','!=','done')
+                            ,('is_subscription_created','=',True)]}"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

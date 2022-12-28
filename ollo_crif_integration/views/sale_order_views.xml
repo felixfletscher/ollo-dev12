@@ -8,21 +8,21 @@
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//header" position="inside">
-                    <button name="action_create_mollib_subscription" type="object" string="Create First Time mollib-sub"
-                            class="btn btn-primary"
-                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>
+<!--                    <button name="action_create_mollib_subscription" type="object" string="Create First Time mollib-sub"-->
+<!--                            class="btn btn-primary"-->
+<!--                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>-->
                     <button name="action_create_refund" type="object" string="Create Refund"
                             class="btn btn-primary"
                             attrs="{'invisible': [('state', '!=', 'sale')]}"/>
                     <button name="action_run_crif_check" type="object" string="Run CRIF check"
                             class="btn btn-primary"
                             attrs="{'invisible': [('state', '!=', 'sale')]}"/>
-                    <button name="action_update_mollib_subscription" type="object" string="Update Mollib Sub"
-                            class="btn btn-primary"
-                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>
-                    <button name="action_end_mollib_subscription" type="object" string="End Mollib Sub"
-                            class="btn btn-primary"
-                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>
+<!--                    <button name="action_update_mollib_subscription" type="object" string="Update Mollib Sub"-->
+<!--                            class="btn btn-primary"-->
+<!--                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>-->
+<!--                    <button name="action_end_mollib_subscription" type="object" string="End Mollib Sub"-->
+<!--                            class="btn btn-primary"-->
+<!--                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>-->
                     <button name="action_create_delivery" type="object" string="Create WH/Out"
                             class="btn btn-primary"
                             attrs="{'invisible': [('state', '!=', 'sale')]}"/>
@@ -32,12 +32,15 @@
                             attrs="{'invisible': [('state', '!=', 'sale')]}">
                         <field name="abo_delivery_count" widget="statinfo" string="Abo Delivery"/>
                     </button>
+                    <button name="action_view_subscription" type="object" class="oe_stat_button" icon="fa-usd"
+                            attrs="{'invisible': [('state', '!=', 'sale')]}"  string="Subscription">
+                    </button>
                 </xpath>
                 <xpath expr="//field[@name='order_line']//tree//field[@name='name']" position="after">
                     <field name="is_starting_fees" invisible="1"/>
                 </xpath>
                 <xpath expr="//field[@name='validity_date']" position="before">
-                    <field name="mollie_subscription_id"/>
+<!--                    <field name="mollie_subscription_id"/>-->
                     <field name="cirf_result" widget="state_selection"/>
                 </xpath>
 

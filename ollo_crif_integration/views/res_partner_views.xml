@@ -15,6 +15,15 @@
                     <button name="action_get_mollib_info" type="object" string="Get Mollib Information"
                             icon="fa-info-circle" class="btn btn-primary"/>
                 </xpath>
+                <xpath expr="//sheet" position="before">
+                    <header>
+                        <button name="action_send_customer" type="object" string="Sync Customer"
+                                class="btn btn-primary"/>
+                        <button name="update_customer" type="object" string="Update Customer"
+                                class="btn btn-primary"/>
+                        <!--                        attrs="{'invisible': [('mollie_contact_id', '!=', False)]}"-->
+                    </header>
+                </xpath>
             </field>
         </record>
     </data>

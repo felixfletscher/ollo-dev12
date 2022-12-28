@@ -21,7 +21,6 @@ class SaleOrderLine(models.Model):
         """ If the sale order line concerns a ticket, we don't want the product name, but the ticket name instead.
         """
         super(SaleOrderLine, self)._compute_name_short()
-
         for record in self:
             if record.is_starting_fees:
                 record.name_short = record.name
@@ -32,15 +31,16 @@ class SaleOrderLine(models.Model):
             Super Create with Multi add linked product to order line
         """
         res = super(SaleOrderLine, self).create(vals)
-        for linked_product in res.product_id.linked_product_line.filtered(lambda x: x.is_starting_fees):
-            line_id = self.env['sale.order.line'].sudo().create({
-                'product_uom_qty': linked_product.product_qty * res.product_uom_qty,
-                'product_id': linked_product.product_linked.product_variant_id.id,
-                'name': linked_product.product_linked.display_name + '(' + res.name + ')',
-                'order_id': res.order_id.id,
-                'is_starting_fees': True,
-            })
-            res.starting_fees_line_id = line_id.id
+        for line in res:
+            for linked_product in line.product_id.linked_product_line.filtered(lambda x: x.is_starting_fees):
+                line_id = self.env['sale.order.line'].sudo().create({
+                    'product_uom_qty': linked_product.product_qty * line.product_uom_qty,
+                    'product_id': linked_product.product_linked.product_variant_id.id,
+                    'name': linked_product.product_linked.display_name + '(' + line.name + ')',
+                    'order_id': line.order_id.id,
+                    'is_starting_fees': True,
+                })
+                line.starting_fees_line_id = line_id.id
         return res
 
     def write(self, vals):

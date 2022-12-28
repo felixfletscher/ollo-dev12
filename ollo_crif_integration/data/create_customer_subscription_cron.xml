@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+   <data noupdate="0">
+      <!--  Cron create subscription  -->
+      <record id="ir_cron_create_customer_mollie_subscription" model="ir.cron">
+         <field name="name">Create Customer Mollie Subscription</field>
+         <field name="model_id" ref="stock.model_stock_picking"/>
+         <field name="state">code</field>
+         <field name="code">model.cron_delivery_validated_create_subscription()</field>
+         <field name="interval_number">12</field>
+         <field name="interval_type">hours</field>
+         <field name="numbercall">-1</field>
+         <field name="priority">5</field>
+         <field name="active" eval="True"/>
+         <field name="doall" eval="False"/>
+      </record>
+   </data>
+</odoo>
