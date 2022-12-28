@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import json
-import requests
-from odoo import fields, models, _
-from odoo.exceptions import ValidationError
+import logging
+
+from odoo import fields, models
 from odoo.addons.ollo_crif_integration.models.mollie import send_mollie_request
 from odoo.addons.payment_mollie.const import SUPPORTED_LOCALES
-import logging
-from operator import itemgetter
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 

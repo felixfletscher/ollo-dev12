@@ -1,10 +1,9 @@
-from odoo import models, api, fields, _
-import requests
-import json
+# -*- coding: utf-8 -*-
 import logging
 
+from odoo import models, _
+
 _logger = logging.getLogger(__name__)
-from odoo.tools import float_compare
 
 
 class ReturnPicking(models.TransientModel):

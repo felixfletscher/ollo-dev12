@@ -1,11 +1,10 @@
-from odoo import models, api, fields, _
-import requests
-import json
+# -*- coding: utf-8 -*-
 import logging
 from datetime import timedelta
 
+from odoo import models, api, fields, _
+
 _logger = logging.getLogger(__name__)
-from odoo.tools import float_compare
 
 
 class SaleOrder(models.Model):

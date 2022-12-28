@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
 import json
-import requests
 import logging
-from operator import itemgetter
+
 import requests
 
 _logger = logging.getLogger(__name__)

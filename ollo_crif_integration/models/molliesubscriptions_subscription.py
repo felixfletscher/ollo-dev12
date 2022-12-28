@@ -1,9 +1,9 @@
+# -*- coding: utf-8 -*-
 import logging
-import requests
-import json
 from datetime import datetime
 
-from odoo import _, api, fields, models
+import requests
+from odoo import fields, models
 from odoo.addons.molliesubscriptions.models.molliesubscriptions_subscription import \
     MollieSubscriptionsSubscription as MollieSubscriptionsSubscriptionExt
 

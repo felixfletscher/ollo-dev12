@@ -1,10 +1,9 @@
-from odoo import models, api, fields, _
-import requests
-import json
+# -*- coding: utf-8 -*-
 import logging
 
+from odoo import models, api, fields
+
 _logger = logging.getLogger(__name__)
-from odoo.tools import float_compare
 
 
 class StockPicking(models.Model):
@@ -18,7 +17,8 @@ class StockPicking(models.Model):
     def action_create_subscription(self):
         products_name = ', '.join(line.product_id.display_name for line in self.move_ids_without_package)
         if self.is_abo_picking:
-            sale_id = self.env['sale.order'].search([('id', '=', self.abo_sale_id.id)], limit=1)
+            sale_id = self.env['sale.order'].search([('name', '=', self.origin)], limit=1)
+
             next_days = (sale_id.next_invoice_date - fields.Date.today()).days
             next_invoice_days = str(next_days) + ' ' + 'days'
             interval_id = self.env['mollie.interval'].search([('display_name', '=', next_invoice_days)], limit=1)
@@ -27,10 +27,12 @@ class StockPicking(models.Model):
                     'name': str(next_days),
                     'interval_type': 'days'
                 })
+
             if sale_id:
+                line_ids = sale_id.order_line.filtered(lambda x: not x.is_starting_fees)
                 subscription = self.env['molliesubscriptions.subscription'].sudo().create({
                     'partner_id': self.partner_id.id,
-                    'value': sale_id.amount_total,
+                    'value': sum(line_ids.mapped('price_subtotal')) + sum(line_ids.mapped('price_tax')),
                     'description': products_name,
                     'start_date': fields.Date.today(),
                     'interval_id': interval_id.id,
