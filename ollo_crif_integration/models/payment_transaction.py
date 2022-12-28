@@ -10,6 +10,9 @@ class PaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
 
     def _mollie_prepare_payment_request_payload(self):
+        """
+            create customer in mollie while checkout from shop
+        """
         res = super(PaymentTransaction, self)._mollie_prepare_payment_request_payload()
         order_lines = self.sale_order_ids.mapped('order_line')
         abo_product_line = order_lines.filtered(

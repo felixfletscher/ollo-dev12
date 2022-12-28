@@ -21,6 +21,9 @@ class SaleOrder(models.Model):
         ('blocked', 'Fail')], string='CIRF result', default='normal')
 
     def action_create_delivery(self):
+        """
+            create abbo product delivery
+        """
         for rec in self:
             abo_delivery_count = self.env['stock.picking'].sudo().search_count(
                 [('abo_sale_id', '=', rec.id), ('is_abo_picking', '=', True), ('state', '!=', 'cancel')])
@@ -71,6 +74,9 @@ class SaleOrder(models.Model):
 
     # abo view abo delivery
     def action_view_abo_delivery(self):
+        """
+            action for view abo delivery
+        """
         self.ensure_one()
         action = {
             'name': 'Abo Delivery',
@@ -83,6 +89,9 @@ class SaleOrder(models.Model):
 
     # abo delivery count
     def compute_abo_delivery(self):
+        """
+            get abo delivery count
+        """
         for rec in self:
             abo_delivery_count = self.env['stock.picking'].sudo().search_count(
                 [('abo_sale_id', '=', self.id), ('is_abo_picking', '=', True)])
@@ -90,6 +99,9 @@ class SaleOrder(models.Model):
 
     # override base method for hide abo delivery
     def action_view_delivery(self):
+        """
+            open normal product delivery
+        """
         return self._get_action_view_picking(self.picking_ids.filtered(lambda picking: not picking.is_abo_picking))
 
     def action_create_mollib_subscription(self):
@@ -108,9 +120,12 @@ class SaleOrder(models.Model):
         pass
 
     def action_view_subscription(self):
+        """
+            smart button for show customer subscription
+        """
         self.ensure_one()
         action = {
-            'name': 'Sub Scription',
+            'name': 'Subscription',
             'view_mode': 'tree,form',
             'res_model': 'molliesubscriptions.subscription',
             'type': 'ir.actions.act_window',
@@ -121,12 +136,17 @@ class SaleOrder(models.Model):
     # override base method for hide abo delivery count
     @api.depends('picking_ids')
     def _compute_picking_ids(self):
+        """
+            remove abo product delivery count from normal product delivery
+        """
         for order in self:
             order.delivery_count = len(order.picking_ids.filtered(lambda picking: not picking.is_abo_picking))
 
     @api.depends('is_subscription', 'state', 'start_date', 'subscription_management', 'date_order')
     def _compute_next_invoice_date(self):
-
+        """
+            add buffer days in next invoice date
+        """
         super(SaleOrder, self)._compute_next_invoice_date()
         buffer_days = self.env['ir.config_parameter'].sudo().get_param('ollo_crif_integration.buffer_days')
         converted_num = int(buffer_days)

@@ -15,6 +15,9 @@ class StockPicking(models.Model):
     mollie_subscription_line = fields.One2many('molliesubscriptions.subscription', 'picking_id')
 
     def action_create_subscription(self):
+        """
+            create subscription
+        """
         products_name = ', '.join(line.product_id.display_name for line in self.move_ids_without_package)
         if self.is_abo_picking:
             sale_id = self.env['sale.order'].search([('name', '=', self.origin)], limit=1)
@@ -45,6 +48,9 @@ class StockPicking(models.Model):
 
     @api.model
     def cron_delivery_validated_create_subscription(self):
+        """
+            cron for create subscription
+        """
         picking_ids = self.env['stock.picking'].search([('picking_type_code', '=', 'outgoing'),
                                                         ('is_abo_picking', '=', True),
                                                         ('sale_id', '!=', False),

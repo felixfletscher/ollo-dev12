@@ -33,7 +33,7 @@
         <field name="view_mode">tree,form</field>
     </record>
 
-    <menuitem id="mollie_interval_menu" name="Mollie Interval"
-              parent="molliesubscriptions.molliesubscruption_payment_root" action="mollie_interval_action"
-              sequence="3"/>
+<!--    <menuitem id="mollie_interval_menu" name="Mollie Interval"-->
+<!--              parent="molliesubscriptions.molliesubscruption_payment_root" action="mollie_interval_action"-->
+<!--              sequence="3"/>-->
 </odoo>

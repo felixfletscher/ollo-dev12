@@ -10,6 +10,9 @@ class ReturnPicking(models.TransientModel):
     _inherit = 'stock.return.picking'
 
     def create_returns(self):
+        """
+            create abo product return
+        """
         picking = self.env['stock.picking'].browse(self._context.get('active_id'))
         for wizard in self:
             new_picking_id, pick_type_id = wizard._create_returns()

@@ -16,6 +16,9 @@ def set_mollie_header(key):
 
 
 def send_mollie_request(url, mollie_key, data=None):
+    """
+        get response from the mollie api
+    """
     if not url:
         return {}
     headers = set_mollie_header(mollie_key)

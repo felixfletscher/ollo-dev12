@@ -8,8 +8,8 @@
             <field name="inherit_id" ref="base.view_partner_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='function']" position="before">
-                    <field name="mollie_contact_id"/>
-                    <field name="mollie_mandate_id"/>
+                    <field name="mollie_contact_id" readonly="1"/>
+                    <field name="mollie_mandate_id" readonly="1"/>
                 </xpath>
                 <xpath expr="//div[@name='button_box']" position="inside">
                     <button name="action_get_mollib_info" type="object" string="Get Mollib Information"
@@ -17,11 +17,10 @@
                 </xpath>
                 <xpath expr="//sheet" position="before">
                     <header>
-                        <button name="action_send_customer" type="object" string="Sync Customer"
-                                class="btn btn-primary"/>
-                        <button name="update_customer" type="object" string="Update Customer"
-                                class="btn btn-primary"/>
-                        <!--                        attrs="{'invisible': [('mollie_contact_id', '!=', False)]}"-->
+<!--                        <button name="action_send_customer" type="object" string="Sync Customer"-->
+<!--                                class="btn btn-primary"/>-->
+<!--                        <button name="update_customer" type="object" string="Update Customer"-->
+<!--                                class="btn btn-primary"/>-->
                     </header>
                 </xpath>
             </field>

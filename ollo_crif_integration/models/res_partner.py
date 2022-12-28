@@ -25,6 +25,9 @@ class ResPartner(models.Model):
         # self._create_mandate()
 
     def _create_customer(self):
+        """
+            create customer in mollie
+        """
         try:
             if self.mollie_contact_id:
                 return self.mollie_contact_id
@@ -52,6 +55,9 @@ class ResPartner(models.Model):
         return True
 
     def _create_mandate(self):
+        """
+            create mandate
+        """
         try:
             if self.mollie_mandate_id:
                 return self.mollie_mandate_id
@@ -82,6 +88,9 @@ class ResPartner(models.Model):
         return True
 
     def update_customer(self):
+        """
+            update customer details in mollie
+        """
         try:
             if not self.mollie_contact_id:
                 raise ValidationError("Mollie contact id not set. please create first.")

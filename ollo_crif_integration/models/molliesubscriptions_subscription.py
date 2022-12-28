@@ -144,6 +144,9 @@ class MollieSubscriptionsSubscription(models.Model):
     interval_id = fields.Many2one('mollie.interval', string='Interval.')
 
     def get_interval_type(self, name, interval_mollie=[]):
+        """
+            Get interval for subscription
+        """
         interval_id = self.env['mollie.interval'].sudo().search([('display_name', '=', name)], limit=1)
         if interval_id:
             return interval_id
@@ -156,6 +159,9 @@ class MollieSubscriptionsSubscription(models.Model):
                 return interval_id
 
     def cron_create_customer_subscription(self):
+        """
+            cron for create subscription
+        """
         partner = self.env['res.partner'].search([
             ('mollie_mandate_id', '!=', False),
         ])

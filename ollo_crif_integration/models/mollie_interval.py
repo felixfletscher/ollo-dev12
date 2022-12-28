@@ -14,5 +14,8 @@ class MollieInterval(models.Model):
 
     @api.depends('name', 'interval_type')
     def compute_display_name(self):
+        """
+            Compute on Display name
+        """
         for rec in self:
             rec.display_name = rec.name + ' ' + rec.interval_type
