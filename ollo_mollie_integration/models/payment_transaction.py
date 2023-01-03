@@ -30,7 +30,7 @@ class PaymentTransaction(models.Model):
             self.partner_id.sudo()._create_customer()
             res.update({
                 "customerId": self.partner_id.mollie_contact_id,
-                # "sequenceType": "first",
+                "sequenceType": "first",
                 # 'method': 'paypal'
             })
         return res
