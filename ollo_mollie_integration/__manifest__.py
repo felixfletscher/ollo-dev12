@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Ollo CRIF Integration",
+    'name': "Ollo Mollie Integration",
     'summary': """
-        Ollo CRIF Integration""",
+        Ollo Mollie Integration""",
     'description': """
-        Ollo CRIF Integration
+        Ollo Mollie Integration
     """,
     'category': 'Customizations',
     'support': 'felix@fletscher.de',
@@ -13,8 +13,10 @@
     'images': ['static/description/icon.png'],
     'depends': ['ollo_linked_products','molliesubscriptions'],
     'data': [
-        'data/create_customer_subscription_cron.xml',
+        'data/create_subscription_cron.xml',
+        'data/create_mollie_payment.xml',
         'data/mollie_interval_data.xml',
+        # 'data/update_mollie_payment_state.xml',
         'security/ir.model.access.csv',
         'views/sale_order_views.xml',
         'views/res_partner_views.xml',
@@ -22,6 +24,8 @@
         'views/res_config_settings.xml',
         'views/stock_picking.xml',
         'views/mollie_interval_views.xml',
+        'views/payment_transaction_views.xml',
+        # 'views/account_move_views.xml',
     ],
     'installable': True,
     'application': True,

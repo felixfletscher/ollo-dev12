@@ -15,7 +15,7 @@ def set_mollie_header(key):
     }
 
 
-def send_mollie_request(url, mollie_key, data=None):
+def send_mollie_request(url, mollie_key, data=None, r_type='post'):
     """
         get response from the mollie api
     """
@@ -23,8 +23,10 @@ def send_mollie_request(url, mollie_key, data=None):
         return {}
     headers = set_mollie_header(mollie_key)
     try:
-        if data:
+        if data and r_type == 'post':
             response = requests.post(url, data=data, headers=headers)
+        elif data and r_type == 'patch':
+            response = requests.patch(url, data=data, headers=headers)
         else:
             response = requests.get(url, headers=headers)
         if response.status_code in (200, 201):
@@ -37,6 +39,6 @@ def send_mollie_request(url, mollie_key, data=None):
             response_data = response.content.decode()
             return {'status': 'error', 'message': json.loads(response_data), 'status_code': response.status_code}
         else:
-            return {'status': 'error', 'message': 'Url Not found.', 'status_code': False}
+            return {'status': 'error', 'message': response.content, 'status_code': False}
     except requests.exceptions.RequestException as req_e:
         return {'status': 'error', 'message': str(req_e), 'status_code': False}

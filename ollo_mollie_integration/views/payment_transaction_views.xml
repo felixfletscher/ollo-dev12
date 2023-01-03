@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit payment transaction form View -->
+        <record id="payment_transaction_form_inherit_ollo_mollie" model="ir.ui.view">
+            <field name="name">payment.transaction.inherit.form</field>
+            <field name="model">payment.transaction</field>
+            <field name="inherit_id" ref="payment.payment_transaction_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_lang']" position="after">
+                    <field name="mollie_payment_method"/>
+                    <field name="customer_account"/>
+                    <field name="card_number"/>
+                    <field name="paypal_agreement"/>
+                    <field name="customer_bic"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
+

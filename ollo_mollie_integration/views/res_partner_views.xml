@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <!-- Inherit res partner form View -->
-        <record id="base_view_partner_form_inherit_ollo_crif" model="ir.ui.view">
+        <record id="base_view_partner_form_inherit_ollo_mollie" model="ir.ui.view">
             <field name="name">res.partner.inherit.form</field>
             <field name="model">res.partner</field>
             <field name="inherit_id" ref="base.view_partner_form"/>
@@ -10,16 +10,13 @@
                 <xpath expr="//field[@name='function']" position="before">
                     <field name="mollie_contact_id" readonly="1"/>
                     <field name="mollie_mandate_id" readonly="1"/>
-                </xpath>
-                <xpath expr="//div[@name='button_box']" position="inside">
-                    <button name="action_get_mollib_info" type="object" string="Get Mollib Information"
-                            icon="fa-info-circle" class="btn btn-primary"/>
+                    <field name="mollie_payment_method" readonly="1"/>
                 </xpath>
                 <xpath expr="//sheet" position="before">
                     <header>
-<!--                        <button name="action_send_customer" type="object" string="Sync Customer"-->
-<!--                                class="btn btn-primary"/>-->
-<!--                        <button name="update_customer" type="object" string="Update Customer"-->
+                        <button name="create_mandate" type="object" string="Mandate"
+                                class="btn btn-primary"/>
+<!--                        <button name="get_customer_payment" type="object" string="Customer Payment"-->
 <!--                                class="btn btn-primary"/>-->
                     </header>
                 </xpath>

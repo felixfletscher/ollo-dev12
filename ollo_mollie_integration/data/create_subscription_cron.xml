@@ -3,7 +3,7 @@
    <data noupdate="0">
       <!--  Cron create subscription  -->
       <record id="ir_cron_create_customer_mollie_subscription" model="ir.cron">
-         <field name="name">Create Customer Mollie Subscription</field>
+         <field name="name">Create Mollie Subscription</field>
          <field name="model_id" ref="stock.model_stock_picking"/>
          <field name="state">code</field>
          <field name="code">model.cron_delivery_validated_create_subscription()</field>

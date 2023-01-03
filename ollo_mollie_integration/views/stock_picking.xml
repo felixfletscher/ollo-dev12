@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <!-- Inherit Stock picking form view -->
-        <record id="stock_picking_inherit_ollo_crif" model="ir.ui.view">
+        <record id="stock_picking_inherit_ollo_mollie" model="ir.ui.view">
             <field name="name">stock.picking.inherit</field>
             <field name="model">stock.picking</field>
             <field name="inherit_id" ref="stock.view_picking_form"/>
