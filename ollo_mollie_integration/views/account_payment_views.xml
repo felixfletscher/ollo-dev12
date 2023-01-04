@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Inherit account move form View -->
+        <record id="account_view_account_payment_form_inherit_ollo_mollie" model="ir.ui.view">
+            <field name="name">account.payment.inherit.form</field>
+            <field name="model">account.payment</field>
+            <field name="inherit_id" ref="account.view_account_payment_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//group[2]" position="inside">
+                    <field name="mollie_payment_method" readonly="1"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

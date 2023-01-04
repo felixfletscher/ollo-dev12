@@ -16,16 +16,15 @@ _logger = logging.getLogger(__name__)
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
-    mollie_payment_state = fields.Selection([
-        ('paid', 'Paid'),
-        ('pending', 'Pending in Mollie'), ('canceled', 'Cancel'), ('expires', 'Expires'),
-        ('failed', 'Failed')], string='Mollie Payment State', default='pending')
-    mollie_payment = fields.Char(string='Mollie Payment', copy=False)
-    mollie_refund_done = fields.Boolean(string="Mollie refund done successfully")
-    sale_order_line = fields.Many2many(comodel_name='sale.order.line')
-    is_recharge_invoice = fields.Boolean(string="Is recharge invoice")
-    recharge_done = fields.Boolean(string="Recharge done in Mollie")
-    invoice_type = fields.Char(string="Invoice Type", copy=False,default="Recharge Invoice")
+    # mollie_payment_state = fields.Selection([
+    #     ('paid', 'Paid'),
+    #     ('pending', 'Pending in Mollie'), ('canceled', 'Cancel'), ('expires', 'Expires'),
+    #     ('failed', 'Failed')], string='Mollie Payment State', copy=False)
+    mollie_payment_states = fields.Char(string='Mollie Payment State', copy=False)
+    mollie_refund_done = fields.Boolean(string='Mollie refund done successfully',copy=False)
+    is_recharge_invoice = fields.Boolean(string='Is recharge invoice',copy=False)
+    recharge_done = fields.Boolean(string='Recharge done in Mollie', copy=False)
+    invoice_type = fields.Char(string='Invoice Type', copy=False)
 
     def create_customer_recharge(self):
         try:
@@ -87,7 +86,8 @@ class AccountMove(models.Model):
                         "amount": {
                             "value": f"{self.amount_total:.2f}",
                             "currency": self.currency_id.name,
-                        }
+                        },
+                        "description": self.name + ' - ' + self.invoice_origin,
                     }
                     response = send_mollie_request(url, mollie_key, data=json.dumps(data))
                     if response and response.get('status_code', False) == 201:
@@ -104,18 +104,21 @@ class AccountMove(models.Model):
         return True
 
     @api.model
-    def cron_update_mollie_payment_state(self):
-        try:
-            invoice_ids = self.env['account.move'].sudo().search(
-                [('state', '=', 'posted'), ('mollie_payment_state', '!=', 'paid')])
-            for rec in invoice_ids:
-                subscription = rec.line_ids.sale_line_ids.order_id.mollie_subscription_line.filtered(
-                    lambda x: x.status == 'active')
-                if subscription:
-                    mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
-                    url = f'https://api.mollie.com/v2/customers/{rec.partner_id.mollie_contact_id}/subscriptions/{subscription[0].subscription_id}/payments'
-                    if not mollie_key:
-                        raise ValidationError("Mollie Api Key not Found.")
+    def cron_update_mollie_subscription_payment_state(self):
+        invoice_ids = self.env['account.move'].sudo().search(
+            [('state', '=', 'posted'), ('mollie_payment_states', '!=', 'paid'),
+             ('partner_id.mollie_contact_id', '!=', False), ('move_type', 'in', ['out_refund', 'out_invoice'])])
+        invoice_ids.update_mollie_first_payment_state()
+        invoice_ids.update_mollie_refund_payment_state()
+        for rec in invoice_ids.filtered(lambda x: x.move_type == 'out_invoice'):
+            subscription = rec.line_ids.sale_line_ids.order_id.mollie_subscription_line.filtered(
+                lambda x: x.status == 'active')
+            if subscription:
+                mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
+                url = f'https://api.mollie.com/v2/customers/{rec.partner_id.mollie_contact_id}/payments'
+                if not mollie_key:
+                    raise ValidationError("Mollie Api Key not Found.")
+                try:
                     response = send_mollie_request(url, mollie_key)
                     if response and response.get('status_code', False) == 200:
                         for payment in response['data']['_embedded']['payments']:
@@ -126,13 +129,77 @@ class AccountMove(models.Model):
                                 next_month = relativedelta(months=+1, day=1, days=-1)
                                 last_date = first_date + next_month
                                 if first_date <= paid_at <= last_date:
-                                    rec.mollie_payment_state = 'paid'
+                                    rec.mollie_payment_states = payment['status']
                                 else:
-                                    rec.mollie_payment_state = 'pending'
-                                rec.mollie_payment = payment['status']
+                                    rec.mollie_payment_states = payment['status']
                             else:
-                                rec.mollie_payment_state = 'pending'
-                                rec.mollie_payment = payment['status']
+                                rec.mollie_payment_states = payment['status']
+                    else:
+                        continue
+                    self._cr.commit()
+                except Exception as error:
+                    _logger.exception(error)
 
-        except Exception as error:
-            _logger.exception(error)
+    def update_mollie_first_payment_state(self):
+        for rec in self.filtered(lambda x: x.move_type == 'out_invoice'):
+            mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
+            url = f'https://api.mollie.com/v2/customers/{rec.partner_id.mollie_contact_id}/payments'
+            if not mollie_key:
+                raise ValidationError("Mollie Api Key not Found.")
+            try:
+                response = send_mollie_request(url, mollie_key)
+                if response and response.get('status_code', False) == 200:
+                    for payment in response['data']['_embedded']['payments']:
+                        if 'paidAt' in payment:
+                            mollie_date = payment['paidAt']
+                            paid_at = datetime.fromisoformat(mollie_date).date()
+                            first_date = date.today().replace(day=1)
+                            next_month = relativedelta(months=+1, day=1, days=-1)
+                            last_date = first_date + next_month
+                            if first_date <= paid_at <= last_date:
+                                rec.mollie_payment_states = payment['status']
+                            else:
+                                rec.mollie_payment_states = payment['status']
+                        else:
+                            rec.mollie_payment_states = payment['status']
+                else:
+                    continue
+                self._cr.commit()
+            except Exception as error:
+                _logger.exception(error)
+
+    def update_mollie_refund_payment_state(self):
+        for rec in self.filtered(lambda x: x.move_type == 'out_refund'):
+            if rec.move_type == 'out_refund' and rec.reversed_entry_id:
+                account_payment_ids = self.env['account.payment'].search([('partner_id', '=', rec.partner_id.id)])
+                account_payment_id = account_payment_ids.filtered(
+                    lambda x: rec.reversed_entry_id in x.reconciled_invoice_ids)
+                if account_payment_id:
+                    mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
+                    transaction = account_payment_id.mollie_transaction
+                    if not transaction:
+                        transaction = account_payment_id.ref.split('-')[-1].strip()
+                    url = f'https://api.mollie.com/v2/payments/{transaction}/refunds'
+                    if not mollie_key:
+                        raise ValidationError("Mollie Api Key not Found.")
+                    try:
+                        response = send_mollie_request(url, mollie_key)
+                        if response and response.get('status_code', False) == 200:
+                            for payment in response['data']['_embedded']['refunds']:
+                                if 'createdAt' in payment:
+                                    mollie_date = payment['createdAt']
+                                    paid_at = datetime.fromisoformat(mollie_date).date()
+                                    first_date = date.today().replace(day=1)
+                                    next_month = relativedelta(months=+1, day=1, days=-1)
+                                    last_date = first_date + next_month
+                                    if first_date <= paid_at <= last_date:
+                                        rec.mollie_payment_states = payment['status']
+                                    else:
+                                        rec.mollie_payment_states = payment['status']
+                                else:
+                                    rec.mollie_payment_states = payment['status']
+                        else:
+                            continue
+                        self._cr.commit()
+                    except Exception as error:
+                        _logger.exception(error)

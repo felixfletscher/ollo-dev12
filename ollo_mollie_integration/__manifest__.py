@@ -26,6 +26,7 @@
         'views/mollie_interval_views.xml',
         'views/payment_transaction_views.xml',
         'views/account_move_views.xml',
+        'views/account_payment_views.xml',
     ],
     'installable': True,
     'application': True,

@@ -23,7 +23,7 @@ def create_subscription(self):
     # Required
     data = {
         'amount': {'currency': self.partner_id.currency_id.name, 'value': f"{self.value:.2f}"},
-        'interval': '1 days',  # self.interval_id.display_name,
+        'interval':  self.interval_id.display_name,
         'description': self.description,
     }
 

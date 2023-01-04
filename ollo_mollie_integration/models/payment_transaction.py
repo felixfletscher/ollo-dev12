@@ -40,5 +40,8 @@ class PaymentTransaction(models.Model):
             Pass provider Ref to account.payment
         """
         res = super(PaymentTransaction, self)._create_payment(**extra_create_values)
-        res.mollie_transaction = self.provider_reference
+        res.write({
+            'mollie_transaction': self.provider_reference,
+            'mollie_payment_method': self.mollie_payment_method
+        })
         return res

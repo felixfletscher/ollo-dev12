@@ -257,11 +257,12 @@ class SaleOrder(models.Model):
 
     def create_recharge_invoice(self):
         invoice_ids = self._create_recurring_invoice()
-        invoice_ids.is_recharge_invoice = True
         sale_line = self.env['sale.order.line'].search(
             [('id', 'not in', invoice_ids.invoice_line_ids.sale_line_ids.ids), ('order_id', '=', self.id)])
         for line in sale_line:
             invoice_ids.write({
+                'is_recharge_invoice': True,
+                'invoice_type': 'Recharge Invoice',
                 'invoice_line_ids': [fields.Command.create({'product_id': line.product_id.id,
                                                             'price_unit': line.price_unit,
                                                             'tax_ids': [fields.Command.set(line.tax_id.ids)],
@@ -272,40 +273,39 @@ class SaleOrder(models.Model):
 
             })
 
-    # def create_subscription_payment(self):
-    #     try:
-    #
-    #         mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
-    #         url = f'https://api.mollie.com/v2/customers/{self.partner_id.mollie_contact_id}/payments'
-    #         if not mollie_key:
-    #             raise ValidationError("Mollie Api Key not Found.")
-    #         response = send_mollie_request(url, mollie_key)
-    #         if response and response.get('status_code', False) == 200:
-    #             print("*******************************", response)
-    #
-    #         data = {
-    #             "amount": {
-    #                 "value": "100.00",
-    #                 "currency": "EUR",
-    #             },
-    #             'sequenceType': 'first',
-    #             # 'method': 'directdebit',
-    #             # "email": self.email,
-    #             'description': 'test payment for sub',
-    #             "redirectUrl": "https://webshop.example.org/order/12345/",
-    #             "webhookUrl": "https://webshop.example.org/payments/webhook/",
-    #             "subscriptionId": 'sub_NXJ6fgkrpQ',
-    #         }
-    #         response = send_mollie_request(url, mollie_key, data=json.dumps(data))
-    #         print("************** iiiiiiiiiiiiiii *****************", response)
-    #         if response and response.get('status_code', False) == 201:
-    #             print("************** send *****************", response)
-    #     #         if response and response.get('data', False) and response['data'].get('id', False):
-    #     #             self.mollie_contact_id = response['data']['id']
-    #     #             return self.mollie_contact_id
-    #     #     else:
-    #     #         raise ValidationError("Getting Error %s." % response.get('message', ''))
-    #     except Exception as error:
-    #         _logger.exception(error)
-    #
-    #     return True
+    def create_customer_recharge(self):
+        try:
+            mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
+            url = 'https://api.mollie.com/v2/payments'
+            if not mollie_key:
+                raise ValidationError("Mollie Api Key not Found.")
+            response = send_mollie_request(url, mollie_key)
+            if response and response.get('status_code', False) == 200:
+                line_ids = self.order_line.filtered(lambda x: not x.is_starting_fees)
+                value = sum(line_ids.mapped('price_subtotal')) + sum(line_ids.mapped('price_tax'))
+                user_lang = self.env.context.get('lang')
+                data = {
+                    "amount": {
+                        "value": str(value),
+                        "currency": self.currency_id.name,
+                    },
+                    'sequenceType': 'recurring',
+                    'customerId': self.partner_id.mollie_contact_id,
+                    'description': 'Recharge' + ' - ' + self.partner_id.name,
+                    "locale": user_lang if user_lang in SUPPORTED_LOCALES else 'en_US',
+                }
+                response = send_mollie_request(url, mollie_key, data=json.dumps(data))
+                if response and response.get('status_code', False) == 201:
+                    message = {
+                        'value': response['data']['amount']['value'],
+                        'sequenceType': response['data']['sequenceType'],
+                        'customerId': response['data']['customerId'],
+                    }
+                    self.message_post(body='Recharge is created. %s' % message)
+                else:
+                    self.message_post(body='Recharge is not created !!!! %s' % response)
+            else:
+                raise ValidationError("Getting Error %s." % response.get('message', ''))
+        except Exception as error:
+            _logger.exception(error)
+        return True

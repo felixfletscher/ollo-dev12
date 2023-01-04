@@ -17,9 +17,9 @@
                             class="btn btn-primary" attrs="{'invisible':['|','|',('is_recharge_invoice', '=', False),('state', '!=', 'posted'),('recharge_done','!=',False)]}"/>
                 </xpath>
                 <xpath expr="//field[@name='invoice_date']" position="after">
-                    <field name="mollie_payment_state"/>
+                    <field name="mollie_payment_states" readonly="1" attrs="{'invisible': [('move_type', 'not in', ['out_refund','out_invoice'])]}"/>
                     <field name="is_recharge_invoice" invisible="1"/>
-                    <field name="invoice_type" readonly="1" attrs="{'invisible': [('is_recharge_invoice', '=', False)]}"/>
+                    <field name="invoice_type" readonly="1" attrs="{'invisible': ['|',('is_recharge_invoice', '=', False),('move_type', 'not in', ['out_refund','out_invoice'])]}"/>
                 </xpath>
             </field>
         </record>

@@ -37,9 +37,10 @@ class PaymentProvider(models.Model):
         :raise: ValidationError if an HTTP error occurs
         """
         res = super(PaymentProvider, self)._mollie_make_request(endpoint, data=data, method=method)
-        if res and res.get('id', False) and res.get('status', '') and res['status'] == 'paid':
+        if res and res.get('id', False) and res.get('status', ''):
             transaction_id = self.env['payment.transaction'].search([('provider_reference', '=', res.get('id'))],
                                                                     limit=1)
             if transaction_id:
                 transaction_id.partner_id.mollie_mandate_id = res.get('mandateId', '')
+                transaction_id.mollie_payment_method = res.get('method', '')
         return res
