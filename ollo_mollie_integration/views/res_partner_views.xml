@@ -9,17 +9,17 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='function']" position="before">
                     <field name="mollie_contact_id" readonly="1"/>
-                    <field name="mollie_mandate_id" readonly="1"/>
+                    <field name="mollie_mandate_id" readonly="1" invisible="1"/>
                     <field name="mollie_payment_method" readonly="1"/>
                 </xpath>
-                <xpath expr="//sheet" position="before">
-                    <header>
-                        <button name="create_mandate" type="object" string="Mandate"
-                                class="btn btn-primary"/>
+<!--                <xpath expr="//sheet" position="before">-->
+<!--                    <header>-->
+<!--                        <button name="create_mandate" type="object" string="Mandate"-->
+<!--                                class="btn btn-primary"/>-->
 <!--                        <button name="get_customer_payment" type="object" string="Customer Payment"-->
 <!--                                class="btn btn-primary"/>-->
-                    </header>
-                </xpath>
+<!--                    </header>-->
+<!--                </xpath>-->
             </field>
         </record>
     </data>

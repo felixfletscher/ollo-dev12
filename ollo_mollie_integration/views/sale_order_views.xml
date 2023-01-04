@@ -8,19 +8,17 @@
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//header" position="inside">
-<!--                    <button name="update_subscription" type="object" string="SUbscription"-->
-<!--                            class="btn btn-primary"/>-->
-                    <button name="action_create_refund" type="object" string="Create Refund"
-                            class="btn btn-primary"
-                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>
+<!--                    <button name="action_create_refund" type="object" string="Create Refund"-->
+<!--                            class="btn btn-primary"-->
+<!--                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>-->
                     <button name="action_run_crif_check" type="object" string="Run CRIF check"
                             class="btn btn-primary"
                             attrs="{'invisible': [('state', '!=', 'sale')]}"/>
-                    <button name="get_subscription_payment" type="object" string="Get Sub Payment"
+<!--                    <button name="get_subscription_payment" type="object" string="Get Sub Payment"-->
+<!--                            class="btn btn-primary" attrs="{'invisible': [('state', '!=', 'sale')]}"/>-->
+                    <button name="create_recharge_invoice" type="object" string="Recharge Invoice"
                             class="btn btn-primary"/>
-<!--                    <button name="create_subscription_payment" type="object" string="Payment"-->
-<!--                            class="btn btn-primary"/>-->
-                    <button name="action_create_delivery" type="object" string="Create WH/Out"
+                    <button name="action_create_delivery" type="object" string="Create Abo WH/Out"
                             class="btn btn-primary"
                             attrs="{'invisible': [('state', '!=', 'sale')]}"/>
                 </xpath>

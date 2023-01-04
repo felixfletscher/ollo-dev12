@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
-import logging
 import json
-from odoo import models, api, fields, _
-from odoo.exceptions import ValidationError
-from odoo.addons.ollo_mollie_integration.models.mollie import send_mollie_request
-from datetime import datetime, date, timedelta
-from dateutil.relativedelta import relativedelta
+import logging
+from datetime import datetime, date
 
+from dateutil.relativedelta import relativedelta
+from odoo import fields, models, _, api
+from odoo.addons.ollo_mollie_integration.models.mollie import send_mollie_request
+from odoo.addons.payment_mollie.const import SUPPORTED_LOCALES
+from odoo.exceptions import ValidationError
+from odoo.tools import config
+from odoo.tools.float_utils import float_is_zero
+from psycopg2.extensions import TransactionRollbackError
+
+_logger = logging.getLogger(__name__)
 _logger = logging.getLogger(__name__)
 
 
@@ -190,8 +196,8 @@ class SaleOrder(models.Model):
                 response = send_mollie_request(url, mollie_key)
                 if response and response.get('status_code', False) == 200:
                     for payment in response['data']['_embedded']['payments']:
-                        if payment['status'] == 'pending':
-                            mollie_date = payment['createdAt']
+                        if payment['status'] == 'paid':
+                            mollie_date = payment['paidAt']
                             amount = float(payment['amount']['value'])
                             paid_at = datetime.fromisoformat(mollie_date).date()
                             first_date = date.today().replace(day=1)
@@ -223,6 +229,7 @@ class SaleOrder(models.Model):
                                             'company_id': mollie_payment_provider_id.company_id.id,
                                             'payment_method_line_id': account_pay_line.id,
                                             'ref': f'{self.name} - {self.partner_id.name} - {payment["id"] or ""}',
+                                            'mollie_transaction': payment["id"]
                                         }
                                         payment = self.env['account.payment'].create(payment_values)
                                         payment.action_post()
@@ -244,9 +251,26 @@ class SaleOrder(models.Model):
     def cron_create_subscription_payment(self):
         sale_order_ids = self.env['sale.order'].search(
             [('recurrence_id', '!=', False), ('mollie_subscription_line', '!=', False),
-             ('invoice_ids.state','=','posted'),('invoice_ids.payment_state','!=','paid')])
+             ('invoice_ids.state', '=', 'posted'), ('invoice_ids.payment_state', '!=', 'paid')])
         for order in sale_order_ids:
             order.get_subscription_payment()
+
+    def create_recharge_invoice(self):
+        invoice_ids = self._create_recurring_invoice()
+        invoice_ids.is_recharge_invoice = True
+        sale_line = self.env['sale.order.line'].search(
+            [('id', 'not in', invoice_ids.invoice_line_ids.sale_line_ids.ids), ('order_id', '=', self.id)])
+        for line in sale_line:
+            invoice_ids.write({
+                'invoice_line_ids': [fields.Command.create({'product_id': line.product_id.id,
+                                                            'price_unit': line.price_unit,
+                                                            'tax_ids': [fields.Command.set(line.tax_id.ids)],
+                                                            'quantity': line.product_uom_qty,
+                                                            'name': line.name,
+                                                            'discount':line.discount,
+                                                             })],
+
+            })
 
     # def create_subscription_payment(self):
     #     try:

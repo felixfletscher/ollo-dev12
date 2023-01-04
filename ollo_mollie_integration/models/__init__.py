@@ -11,4 +11,5 @@ from . import res_config_settings
 from . import mollie
 from . import payment_provider
 from . import mollie_interval
-# from . import account_move
+from . import account_move
+from . import account_payment

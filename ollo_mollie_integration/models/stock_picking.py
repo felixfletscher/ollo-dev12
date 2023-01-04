@@ -35,7 +35,7 @@ class StockPicking(models.Model):
             #         'interval_type': 'days'
             #     })
             self.partner_id.sudo().get_customer_payment()
-            self.partner_id.sudo().create_mandate()
+            # self.partner_id.sudo().create_mandate()
             line_ids = sale_id.order_line.filtered(lambda x: not x.is_starting_fees)
             buffer_days = self.env['ir.config_parameter'].sudo().get_param('ollo_mollie_integration.buffer_days')
             converted_num = int(buffer_days)

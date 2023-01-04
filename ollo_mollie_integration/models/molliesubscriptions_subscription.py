@@ -22,12 +22,9 @@ def create_subscription(self):
 
     # Required
     data = {
-        'amount': {'currency': 'EUR', 'value': f"{self.value:.2f}"},
-        'interval': self.interval_id.display_name,
+        'amount': {'currency': self.partner_id.currency_id.name, 'value': f"{self.value:.2f}"},
+        'interval': '1 days',  # self.interval_id.display_name,
         'description': self.description,
-        # 'startDate': self.start_date.strftime('%Y-%m-%d'),
-        # 'method': 'directdebit',#'paypal',
-        # '': 'PpwIiDeRpMQsW090Q',
     }
 
     # Optional
@@ -86,7 +83,7 @@ def update_subscription_data(self):
 
             # interval_mollie = response_dict['interval'].split(' ')
             interval_id = self.env.ref('ollo_mollie_integration.mollie_interval_1month')
-            #self.get_interval_type(response_dict['interval'], interval_mollie=interval_mollie)
+            # self.get_interval_type(response_dict['interval'], interval_mollie=interval_mollie)
             record.interval_id = interval_id.id  # response_dict['interval']
         return self._get_notification_message(
             message=f"Subscription Data {response_dict['id']} successfully updated.", message_type='success')
@@ -106,7 +103,7 @@ def update_subscription(self):
         "Authorization": f"Bearer {self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')}"}
 
     data = {
-        'amount': {'currency': 'EUR', 'value': f"{self.value:.2f}"},
+        'amount': {'currency': self.partner_id.currency_id.name, 'value': f"{self.value:.2f}"},
         'description': self.description
     }
 
@@ -183,10 +180,47 @@ def update_payments(self):
                                               message_type='danger')
 
 
+def cancel_subscription(self):
+    if not self.subscription_id:
+        notification = self._get_notification_message(message=f'Error, Subscription was not yet created.',
+                                                      message_type='danger')
+        return notification
+
+    if self.status == 'canceled':
+        notification = self._get_notification_message(message=f'Error, Subscription was already canceled.',
+                                                      message_type='danger')
+        return notification
+    if self.order_id.stage_category != 'closed':
+        notification = self._get_notification_message(message=f'Please cancel subscription in related sale order!',
+                                                      message_type='danger')
+        return notification
+
+    url = f'https://api.mollie.com/v2/customers/{self.customer_id}/subscriptions/{self.subscription_id}'
+    headers = {
+        "Authorization": f"Bearer {self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')}"}
+
+    response = requests.delete(url, headers=headers)
+    response_dict = response.json()
+
+    _logger.info(response.status_code)
+    _logger.info(response.text)
+
+    if response.status_code == 200:
+        for record in self:
+            record.status = response_dict['status']
+            record.mollie_canceled_at = datetime.strptime(response_dict['canceledAt'], '%Y-%m-%dT%H:%M:%S+00:00')
+        return self._get_notification_message(message=f"Subscription {response_dict['id']} successfully canceled.",
+                                              message_type='success')
+    else:
+        return self._get_notification_message(message=f"Error, subscription was not canceled: {response.text}",
+                                              message_type='danger')
+
+
 MollieSubscriptionsSubscriptionExt.create_subscription = create_subscription
 MollieSubscriptionsSubscriptionExt.update_subscription_data = update_subscription_data
 MollieSubscriptionsSubscriptionExt.update_subscription = update_subscription
 MollieSubscriptionsSubscriptionExt.update_payments = update_payments
+MollieSubscriptionsSubscriptionExt.cancel_subscription = cancel_subscription
 
 
 class MollieSubscriptionsSubscription(models.Model):

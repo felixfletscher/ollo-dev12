@@ -34,3 +34,11 @@ class PaymentTransaction(models.Model):
                 # 'method': 'paypal'
             })
         return res
+
+    def _create_payment(self, **extra_create_values):
+        """
+            Pass provider Ref to account.payment
+        """
+        res = super(PaymentTransaction, self)._create_payment(**extra_create_values)
+        res.mollie_transaction = self.provider_reference
+        return res
