@@ -229,7 +229,8 @@ class SaleOrder(models.Model):
                                             'company_id': mollie_payment_provider_id.company_id.id,
                                             'payment_method_line_id': account_pay_line.id,
                                             'ref': f'{self.name} - {self.partner_id.name} - {payment["id"] or ""}',
-                                            'mollie_transaction': payment["id"]
+                                            'mollie_transaction': payment['id'],
+                                            'mollie_payment_method': payment['method'],
                                         }
                                         payment = self.env['account.payment'].create(payment_values)
                                         payment.action_post()
@@ -260,17 +261,18 @@ class SaleOrder(models.Model):
         sale_line = self.env['sale.order.line'].search(
             [('id', 'not in', invoice_ids.invoice_line_ids.sale_line_ids.ids), ('order_id', '=', self.id)])
         for line in sale_line:
+            vals = {
+                'product_id': line.product_id.id,
+                'price_unit': line.price_unit,
+                'tax_ids': [fields.Command.set(line.tax_id.ids)],
+                'quantity': line.product_uom_qty,
+                'name': line.name,
+                'discount': line.discount,
+            }
             invoice_ids.write({
                 'is_recharge_invoice': True,
                 'invoice_type': 'Recharge Invoice',
-                'invoice_line_ids': [fields.Command.create({'product_id': line.product_id.id,
-                                                            'price_unit': line.price_unit,
-                                                            'tax_ids': [fields.Command.set(line.tax_id.ids)],
-                                                            'quantity': line.product_uom_qty,
-                                                            'name': line.name,
-                                                            'discount':line.discount,
-                                                             })],
-
+                'invoice_line_ids': [fields.Command.create(vals)],
             })
 
     def create_customer_recharge(self):
