@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section class="oe_container">
+  <div class="row">
+    <div class="col-sm-12">
+      <h1 class="oe_slogan">Ollo Mollie Integration</h1>
+      <h2 class="oe_slogan">by Fletscher</h2>
+      <br />
+    </div>
+  </div>
+</section>
+<section class="oe_container">
+  <div>
+    <div class="col-sm-12">
+      <h4 style="font-size: 24px; font-family: 'Lato', 'Open Sans', 'Helvetica', Sans; text-align: center;">
+        <span class="d-none d-sm-inline-block" style="width: 10%; margin: 32px 20px; border-top: solid 1px; vertical-align: middle; opacity: 0.3"></span>
+        <b>Konfiguration</b>
+        <span class="d-none d-sm-inline-block" style="width: 10%; margin: 32px 20px; border-top: solid 1px; vertical-align: middle; opacity: 0.3"></span>
+      </h4>
+    </div>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Process step</th>
+          <th scope="col">Expected behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">1</th>
+          <td>Define buffer date in odoo settings</td>
+          <td>Next invoice date on sale order subscription in odoo is 30 days + buffer date after create subscription on WH/OUT </td>
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td>Go to shop, put abo product in checkout</td>
+          <td>Find Mollie payment method</td>
+        </tr>
+        <tr>
+          <th scope="row">3</th>
+          <td>Choose Mollie payment method</td>
+          <td>Redirect to Mollie payment window</td>
+        </tr>
+        <tr>
+          <th scope="row">4</th>
+          <td>Pay in Mollie window</td>
+          <td>Customer is created in Mollie payment with selected payment method is created in Mollie mandate is created in Mollie </td>
+        </tr>
+        <tr>
+          <th scope="row">5</th>
+          <td>Go to sale order in backend</td>
+          <td>Related invoice which is posted with mollie payment state in Paid</td>
+        </tr>
+        <tr>
+          <th scope="row">6</th>
+          <td>Click create Abo WH/OUT</td>
+          <td>WH/OUT is created</td>
+        </tr>
+        <tr>
+          <th scope="row">7</th>
+          <td>Go to related Abo WH/OUT</td>
+          <td>Smart Button : Abo Delivery :- Creating Delivery with storable product which linked with abo products. </td>
+        </tr>
+        <tr>
+          <th scope="row">8</th>
+          <td>Validate WH/OUT</td>
+          <td>Create Mollie subscription button appears</td>
+        </tr>
+        <tr>
+          <th scope="row">9</th>
+          <td>On sale order in odoo click on Close to end subscription invoice creation in odoo and in Mollie as well </td>
+          <td>Subscription in Mollie is created</td>
+        </tr>
+        <tr>
+          <th scope="row">10</th>
+          <td>Go to the invoice click on Add credit note confirm that invoice and click on create mollie credit note. </td>
+          <td>Mollie subscription is ended monthly invoices are not created anymore </td>
+        </tr>
+        <tr>
+          <th scope="row">11</th>
+          <td>On sale order in odoo click on Recharge Invoice</td>
+          <td>In odoo chatter the log is created with the refund amount. In mollie refund is created for particular payment </td>
+        </tr>
+        <tr>
+          <th scope="row">12</th>
+          <td>Go to the related invoice and click on Create customer recharge</td>
+          <td>In odoo chatter the log is created with the recharge amount, sequence type and customer mollie id. Recharge is created in mollie with invoice total amount </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="col-sm-12">
+      <h4 style="font-size: 24px; font-family: 'Lato', 'Open Sans', 'Helvetica', Sans; text-align: center;">
+        <span class="d-none d-sm-inline-block" style="width: 10%; margin: 32px 20px; border-top: solid 1px; vertical-align: middle; opacity: 0.3"></span>
+        <b>Zeitgesteuerte Aufgaben</b>
+        <span class="d-none d-sm-inline-block" style="width: 10%; margin: 32px 20px; border-top: solid 1px; vertical-align: middle; opacity: 0.3"></span>
+      </h4>
+    </div>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Cron name</th>
+          <th scope="col">Expected behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">1</th>
+          <td>Create Mollie Subscription Payment</td>
+          <td>Create subscription payment related to their subscription and customer if we found in mollie status as paid related invoice time period. </td>
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td>Create Mollie Subscription</td>
+          <td>Create Mollie subscription for WH/OUT in Done state </td>
+        </tr>
+        <tr>
+          <th scope="row">3</th>
+          <td>Update Mollie Subscription Payment</td>
+          <td>Get payment state from Mollie payments into Odoo invoices Mollie payment state field </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+<section class="oe_container">
+  <div class="row">
+    <div class="col-sm-12" style="margin-bottom: 16px">
+      <h4 style="font-size: 24px; font-family: 'Lato', 'Open Sans', 'Helvetica', Sans; text-align: center;">
+        <span class="d-none d-sm-inline-block" style="width: 10%; margin: 32px 20px; border-top: solid 1px; vertical-align: middle; opacity: 0.3"></span>
+        <b>Support</b>
+        <span class="d-none d-sm-inline-block" style="width: 10%; margin: 32px 20px; border-top: solid 1px; vertical-align: middle; opacity: 0.3"></span>
+      </h4>
+      <div style="padding:0.2em 0.5em; font-size: 120%;text-align:center">
+        <h3>Supportanfragen: www.fletscher.de</h3>
+      </div>
+    </div>
+  </div>
+</section>

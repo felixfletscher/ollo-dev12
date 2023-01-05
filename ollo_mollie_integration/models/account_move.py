@@ -21,8 +21,8 @@ class AccountMove(models.Model):
     #     ('pending', 'Pending in Mollie'), ('canceled', 'Cancel'), ('expires', 'Expires'),
     #     ('failed', 'Failed')], string='Mollie Payment State', copy=False)
     mollie_payment_states = fields.Char(string='Mollie Payment State', copy=False)
-    mollie_refund_done = fields.Boolean(string='Mollie refund done successfully',copy=False)
-    is_recharge_invoice = fields.Boolean(string='Is recharge invoice',copy=False)
+    mollie_refund_done = fields.Boolean(string='Mollie refund done successfully', copy=False)
+    is_recharge_invoice = fields.Boolean(string='Is recharge invoice', copy=False)
     recharge_done = fields.Boolean(string='Recharge done in Mollie', copy=False)
     invoice_type = fields.Char(string='Invoice Type', copy=False)
 
@@ -107,19 +107,25 @@ class AccountMove(models.Model):
     def cron_update_mollie_subscription_payment_state(self):
         invoice_ids = self.env['account.move'].sudo().search(
             [('state', '=', 'posted'), ('mollie_payment_states', '!=', 'paid'),
-             ('partner_id.mollie_contact_id', '!=', False), ('move_type', 'in', ['out_refund', 'out_invoice'])])
+             ('partner_id.mollie_contact_id', '!=', False), ('move_type', 'in', ['out_invoice'])])
+        refund_invoice_ids = self.env['account.move'].sudo().search(
+            [('state', '=', 'posted'), ('mollie_payment_states', '!=', 'refunded'),
+             ('partner_id.mollie_contact_id', '!=', False), ('move_type', 'in', ['out_refund'])])
         invoice_ids.update_mollie_first_payment_state()
-        invoice_ids.update_mollie_refund_payment_state()
-        for rec in invoice_ids.filtered(lambda x: x.move_type == 'out_invoice'):
+        invoice_ids.update_mollie_subscription_payment_state()
+        refund_invoice_ids.update_mollie_refund_payment_state()
+
+    def update_mollie_subscription_payment_state(self):
+        for rec in self:
             subscription = rec.line_ids.sale_line_ids.order_id.mollie_subscription_line.filtered(
                 lambda x: x.status == 'active')
             if subscription:
                 mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
-                url = f'https://api.mollie.com/v2/customers/{rec.partner_id.mollie_contact_id}/payments'
+                url = f'https://api.mollie.com/v2/customers/{rec.partner_id.mollie_contact_id}/subscriptions/{subscription[0].subscription_id}/payments'
                 if not mollie_key:
                     raise ValidationError("Mollie Api Key not Found.")
                 try:
-                    response = send_mollie_request(url, mollie_key)
+                    response = send_mollie_request(url, mollie_key, limit=10)
                     if response and response.get('status_code', False) == 200:
                         for payment in response['data']['_embedded']['payments']:
                             if 'paidAt' in payment:
@@ -134,20 +140,18 @@ class AccountMove(models.Model):
                                     rec.mollie_payment_states = payment['status']
                             else:
                                 rec.mollie_payment_states = payment['status']
-                    else:
-                        continue
                     self._cr.commit()
                 except Exception as error:
                     _logger.exception(error)
 
     def update_mollie_first_payment_state(self):
-        for rec in self.filtered(lambda x: x.move_type == 'out_invoice'):
+        for rec in self:
             mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
             url = f'https://api.mollie.com/v2/customers/{rec.partner_id.mollie_contact_id}/payments'
             if not mollie_key:
                 raise ValidationError("Mollie Api Key not Found.")
             try:
-                response = send_mollie_request(url, mollie_key)
+                response = send_mollie_request(url, mollie_key, limit=10)
                 if response and response.get('status_code', False) == 200:
                     for payment in response['data']['_embedded']['payments']:
                         if 'paidAt' in payment:
@@ -162,14 +166,12 @@ class AccountMove(models.Model):
                                 rec.mollie_payment_states = payment['status']
                         else:
                             rec.mollie_payment_states = payment['status']
-                else:
-                    continue
                 self._cr.commit()
             except Exception as error:
                 _logger.exception(error)
 
     def update_mollie_refund_payment_state(self):
-        for rec in self.filtered(lambda x: x.move_type == 'out_refund'):
+        for rec in self:
             if rec.move_type == 'out_refund' and rec.reversed_entry_id:
                 account_payment_ids = self.env['account.payment'].search([('partner_id', '=', rec.partner_id.id)])
                 account_payment_id = account_payment_ids.filtered(
@@ -183,7 +185,7 @@ class AccountMove(models.Model):
                     if not mollie_key:
                         raise ValidationError("Mollie Api Key not Found.")
                     try:
-                        response = send_mollie_request(url, mollie_key)
+                        response = send_mollie_request(url, mollie_key, limit=10)
                         if response and response.get('status_code', False) == 200:
                             for payment in response['data']['_embedded']['refunds']:
                                 if 'createdAt' in payment:
@@ -198,8 +200,6 @@ class AccountMove(models.Model):
                                         rec.mollie_payment_states = payment['status']
                                 else:
                                     rec.mollie_payment_states = payment['status']
-                        else:
-                            continue
                         self._cr.commit()
                     except Exception as error:
                         _logger.exception(error)

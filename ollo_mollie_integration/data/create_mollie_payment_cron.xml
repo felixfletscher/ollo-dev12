@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
    <data noupdate="0">
-      <!--  Cron create subscription  payment-->
-      <record id="ir_cron_create_mollie_payment" model="ir.cron">
-         <field name="name">Create Mollie Payment</field>
+      <!--  Cron create mollie subscription  payment-->
+      <record id="ir_cron_create_mollie_subscription_payment" model="ir.cron">
+         <field name="name">Create Mollie Subscription Payment</field>
          <field name="model_id" ref="sale.model_sale_order"/>
          <field name="state">code</field>
          <field name="code">model.cron_create_subscription_payment()</field>

@@ -15,7 +15,7 @@ def set_mollie_header(key):
     }
 
 
-def send_mollie_request(url, mollie_key, data=None, r_type='post'):
+def send_mollie_request(url, mollie_key, data=None, r_type='post', limit=50):
     """
         get response from the mollie api
     """
@@ -28,7 +28,8 @@ def send_mollie_request(url, mollie_key, data=None, r_type='post'):
         elif data and r_type == 'patch':
             response = requests.patch(url, data=data, headers=headers)
         else:
-            response = requests.get(url, headers=headers)
+            get_url = f'{url.replace(",","")}?limit={limit}'
+            response = requests.get(get_url, headers=headers)
         if response.status_code in (200, 201):
             response_data = response.content.decode()
             return {

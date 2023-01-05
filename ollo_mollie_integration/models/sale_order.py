@@ -21,7 +21,17 @@ class SaleOrder(models.Model):
 
     mollie_subscription_line = fields.One2many('molliesubscriptions.subscription', 'order_id')
     abo_delivery_count = fields.Integer(compute="compute_abo_delivery", copy=False, default=0)
-    is_starting_fees = fields.Boolean('Starting Fess', default=False)
+    is_abo_sale_order = fields.Boolean('Abo sale order', default=False, compute="compute_abo_order", store=True)
+
+    @api.depends('order_line')
+    def compute_abo_order(self):
+        for rec in self:
+            abo_product_line = rec.order_line.filtered(
+                lambda x: x.product_id.linked_product_line.filtered(lambda x: x.is_abo_product))
+            if abo_product_line:
+                rec.is_abo_sale_order = True
+
+
 
     # mollie_subscription_id = fields.Char(related='mollie_id.subscription_id')
     cirf_result = fields.Selection([
@@ -113,19 +123,7 @@ class SaleOrder(models.Model):
         """
         return self._get_action_view_picking(self.picking_ids.filtered(lambda picking: not picking.is_abo_picking))
 
-    def action_create_mollib_subscription(self):
-        pass
-
-    def action_create_refund(self):
-        pass
-
     def action_run_crif_check(self):
-        pass
-
-    def action_update_mollib_subscription(self):
-        pass
-
-    def action_end_mollib_subscription(self):
         pass
 
     def action_view_subscription(self):
@@ -186,14 +184,14 @@ class SaleOrder(models.Model):
 
     def get_subscription_payment(self):
         self.update_subscription()
-        try:
-            subscription = self.mollie_subscription_line.filtered(lambda x: x.status == 'active')
-            if subscription:
-                mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
-                url = f'https://api.mollie.com/v2/customers/{self.partner_id.mollie_contact_id}/subscriptions/{subscription[0].subscription_id}/payments'
-                if not mollie_key:
-                    raise ValidationError("Mollie Api Key not Found.")
-                response = send_mollie_request(url, mollie_key)
+        subscription = self.mollie_subscription_line.filtered(lambda x: x.status == 'active')
+        if subscription:
+            mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
+            url = f'https://api.mollie.com/v2/customers/{self.partner_id.mollie_contact_id}/subscriptions/{subscription[0].subscription_id}/payments'
+            if not mollie_key:
+                raise ValidationError("Mollie Api Key not Found.")
+            response = send_mollie_request(url, mollie_key)
+            try:
                 if response and response.get('status_code', False) == 200:
                     for payment in response['data']['_embedded']['payments']:
                         if payment['status'] == 'paid':
@@ -206,14 +204,9 @@ class SaleOrder(models.Model):
                             if first_date <= paid_at <= last_date:
                                 invoice_ids = self.invoice_ids.filtered(
                                     lambda x: first_date <= x.invoice_date <= last_date and x.payment_state != 'paid'
-                                              and x.invoice_origin == self.name)
+                                              and x.invoice_origin == self.name and x.state == 'posted')
                                 for inv in invoice_ids:
-                                    # lines = self.env['account.move'].browse(inv.id).line_ids
-                                    # account_pay = self.env['account.payment.method'].sudo().search(
-                                    #     [('code', '=', 'mollie'), ('payment_type', '=', 'inbound')], limit=1)
-
                                     mollie_payment_provider_id = self.env.ref('payment.payment_provider_mollie')
-
                                     account_pay_line = self.env['account.payment.method.line'].sudo().search(
                                         [('payment_provider_state', '=', 'enabled'),
                                          ('payment_provider_id', '=', mollie_payment_provider_id.id)], limit=1)
@@ -234,7 +227,6 @@ class SaleOrder(models.Model):
                                         }
                                         payment = self.env['account.payment'].create(payment_values)
                                         payment.action_post()
-
                                         if inv:
                                             inv.filtered(lambda inv: inv.state == 'draft').action_post()
 
@@ -242,10 +234,8 @@ class SaleOrder(models.Model):
                                                 lambda line: line.account_id == payment.destination_account_id
                                                              and not line.reconciled
                                             ).reconcile()
-
-        except Exception as error:
-            _logger.exception(error)
-
+            except Exception as error:
+                _logger.exception(error)
         return True
 
     @api.model
@@ -260,20 +250,21 @@ class SaleOrder(models.Model):
         invoice_ids = self._create_recurring_invoice()
         sale_line = self.env['sale.order.line'].search(
             [('id', 'not in', invoice_ids.invoice_line_ids.sale_line_ids.ids), ('order_id', '=', self.id)])
+        vals = {}
         for line in sale_line:
-            vals = {
+            vals.update({
                 'product_id': line.product_id.id,
                 'price_unit': line.price_unit,
                 'tax_ids': [fields.Command.set(line.tax_id.ids)],
                 'quantity': line.product_uom_qty,
                 'name': line.name,
                 'discount': line.discount,
-            }
-            invoice_ids.write({
-                'is_recharge_invoice': True,
-                'invoice_type': 'Recharge Invoice',
-                'invoice_line_ids': [fields.Command.create(vals)],
             })
+        invoice_ids.write({
+            'is_recharge_invoice': True,
+            'invoice_type': 'Recharge Invoice',
+            'invoice_line_ids': [fields.Command.create(vals)],
+        })
 
     def create_customer_recharge(self):
         try:

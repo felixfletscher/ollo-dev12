@@ -8,38 +8,34 @@
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//header" position="inside">
-<!--                    <button name="action_create_refund" type="object" string="Create Refund"-->
-<!--                            class="btn btn-primary"-->
-<!--                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>-->
+                    <field name="is_abo_sale_order" invisible="1"/>
                     <button name="action_run_crif_check" type="object" string="Run CRIF check"
                             class="btn btn-primary"
-                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>
-<!--                    <button name="get_subscription_payment" type="object" string="Get Sub Payment"-->
-<!--                            class="btn btn-primary" attrs="{'invisible': [('state', '!=', 'sale')]}"/>-->
+                            attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}"/>
                     <button name="create_recharge_invoice" type="object" string="Recharge Invoice"
-                            class="btn btn-primary"/>
+                            class="btn btn-primary"
+                            attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}"/>
                     <button name="action_create_delivery" type="object" string="Create Abo WH/Out"
                             class="btn btn-primary"
-                            attrs="{'invisible': [('state', '!=', 'sale')]}"/>
+                            attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}"/>
                 </xpath>
                 <xpath expr="//div[@name='button_box']" position="inside">
                     <button name="action_view_abo_delivery" type="object" class="oe_stat_button" icon="fa-truck"
-                            attrs="{'invisible': [('state', '!=', 'sale')]}">
+                            attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}">
                         <field name="abo_delivery_count" widget="statinfo" string="Abo Delivery"/>
                     </button>
                     <button name="action_view_subscription" type="object" class="oe_stat_button" icon="fa-usd"
-                            attrs="{'invisible': [('state', '!=', 'sale')]}"  string="Mollie Subscription">
+                            attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}"
+                            string="Mollie Subscription">
                     </button>
                 </xpath>
                 <xpath expr="//field[@name='order_line']//tree//field[@name='name']" position="after">
                     <field name="is_starting_fees" invisible="1"/>
                 </xpath>
                 <xpath expr="//field[@name='validity_date']" position="before">
-<!--                    <field name="mollie_subscription_id"/>-->
-                    <field name="cirf_result" widget="state_selection"/>
+                    <field name="cirf_result" widget="state_selection"
+                           attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}"/>
                 </xpath>
-
-
             </field>
         </record>
     </data>
