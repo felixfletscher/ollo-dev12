@@ -4,7 +4,7 @@ import json
 import logging
 
 from odoo import fields, models
-from odoo.addons.ollo_mollie_integration.models.mollie import send_mollie_request
+from odoo.addons.ollo_mollie_integration.utils.mollie import send_mollie_request
 from odoo.addons.payment_mollie.const import SUPPORTED_LOCALES
 from odoo.exceptions import ValidationError
 from datetime import datetime
@@ -19,14 +19,17 @@ class ResPartner(models.Model):
     mollie_mandate_id = fields.Char(string='Mollie Mandate')
     mollie_payment_method = fields.Char(string='Mollie Payment Method')
 
-
     def action_send_customer(self):
         self._create_customer()
-        # self._create_mandate()
 
     def _create_customer(self):
         """
-            create customer in mollie
+            Create a customer in Mollie for the current record.
+            A Mollie customer is created using the name, email, and language of the current record.
+            The Mollie API key is read from the system configuration.
+            If the customer is successfully created, the Mollie contact ID is stored in the `mollie_contact_id`
+            field of the current record.
+            If an error occurs, a ValidationError is raised.
         """
         try:
             if self.mollie_contact_id:
@@ -56,8 +59,14 @@ class ResPartner(models.Model):
 
     def update_customer(self):
         """
-            update customer details in mollie
-        """
+            Update a customer in Mollie for the current record.
+            The Mollie customer is updated with the name, email, and language of the current record.
+            The Mollie API key is read from the system configuration.
+            If the Mollie contact ID is not set for the current record, a ValidationError is raised.
+            If the customer is successfully updated, a ValidationError with the message "Contact Successfully
+            updated in mollie." is raised.
+            If an error occurs, a ValidationError is raised with the error message received from Mollie.
+            """
         try:
             if not self.mollie_contact_id:
                 raise ValidationError("Mollie contact id not set. please create first.")
@@ -85,49 +94,17 @@ class ResPartner(models.Model):
 
     def get_customer_payment(self):
         """
-            get customer payment from Mollie
-        """
+            Retrieve payment information for a customer from Mollie.
+
+           The payment information includes the payment method used for each payment made by the customer.
+           The Mollie API key is read from the system configuration.
+           If payment information is successfully retrieved, the payment method is stored in the
+           `mollie_payment_method` field of the current record and the corresponding payment transaction records.
+           If an error occurs, a ValidationError is raised with the error message received from Mollie.
+           """
         try:
             url = f'https://api.mollie.com/v2/customers/{self.mollie_contact_id}/payments'
             mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
-            if not mollie_key:
-                raise ValidationError("Mollie Api Key not Found.")
-            response = send_mollie_request(url, mollie_key)
-
-            if response and response.get('status_code', False) == 200:
-                for payment in response['data']['_embedded']['payments']:
-                    transaction_id = self.env['payment.transaction'].sudo().search([('provider_reference', '=', payment['id']),
-                                                                                    ('partner_id', '=', self.id),
-                                                                                    ('mollie_payment_method', '=', False)])
-                    if transaction_id:
-                        self.mollie_payment_method = payment['method']
-                        transaction_id.mollie_payment_method = payment['method']
-                        if transaction_id.mollie_payment_method != 'paypal':
-                            transaction_id.customer_account = payment['details']['cardNumber']
-                        else:
-                            transaction_id.paypal_agreement = payment['details']['paypalReference']
-                        # self.create_mandate(transaction_id)
-            else:
-                raise ValidationError("Getting Error %s." % response.get('message', ''))
-
-        except Exception as error:
-            _logger.exception(error)
-
-        return True
-
-    def create_mandate(self):
-        """
-            create mandate
-        """
-        try:
-            if self.mollie_mandate_id:
-                return self.mollie_mandate_id
-            if not self.mollie_contact_id:
-                self._create_customer()
-            # url = 'https://api.mollie.com/v2/payments'
-
-            mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
-            url = f'https://api.mollie.com/v2/customers/{self.mollie_contact_id}/payments'
             if not mollie_key:
                 raise ValidationError("Mollie Api Key not Found.")
             response = send_mollie_request(url, mollie_key)
@@ -137,37 +114,13 @@ class ResPartner(models.Model):
                     transaction_id = self.env['payment.transaction'].sudo().search(
                         [('provider_reference', '=', payment['id']),
                          ('partner_id', '=', self.id),
-                         ('mollie_payment_method', '!=', False)])
-                    data = {}
+                         ('mollie_payment_method', '=', False)])
                     if transaction_id:
-                        if transaction_id.mollie_payment_method == 'paypal':
-                            data.update({
-                                "method": 'paypal',  # required
-                                "consumerName": self.name,  # required
-                                'paypalBillingAgreementId': transaction_id.paypal_agreement,
-                                'consumerEmail': self.email,
-                                # "consumerAccount": "NL55INGB0000000000",
-                                # "consumerBic": "INGBNL2A",
-                                # "signatureDate": datetime.today().strftime('%Y-%m-%d'),
-                                # "mandateReference": "YOUR-COMPANY-MD13804",
-                            })
-                        else:
-                            data.update({
-                                "method": 'directdebit',
-                                "consumerName": self.name,  # required
-                                "consumerAccount":  "NL55INGB0000000000",  # conditional
-                                "signatureDate": datetime.today().strftime('%Y-%m-%d'),
-                                'consumerEmail': self.email
-                            })
-                        url = 'https://api.mollie.com/v2/customers/{id}/mandates'.format(id=self.mollie_contact_id)
-                        response = send_mollie_request(url, mollie_key, data=json.dumps(data))
-                        if response and response.get('status_code', False) == 201:
-                            if response and response.get('data', False) and response['data'].get('id', False):
-                                self.mollie_mandate_id = response['data']['id']
-                                return self.mollie_mandate_id
-                        else:
-                            self.message_post(body='Mandate in not created!!!! %s' % response)
-                            raise ValidationError("Getting Error %s." % response.get('message', ''))
+                        self.mollie_payment_method = payment['method']
+                        transaction_id.mollie_payment_method = payment['method']
+            else:
+                raise ValidationError("Getting Error %s." % response.get('message', ''))
+
         except Exception as error:
             _logger.exception(error)
 

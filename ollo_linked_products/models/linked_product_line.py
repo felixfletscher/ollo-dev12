@@ -19,11 +19,3 @@ class LinkedProductLine(models.Model):
     is_abo_product = fields.Boolean(string='Is abo Product?')
     is_starting_fees = fields.Boolean(string='Is starting Fees?')
 
-    @api.onchange('product_linked', 'product_variant_id')
-    def _onchange_product_linked(self):
-        res = {
-            'domain': {
-                'product_variant_id': [('id', 'in', self.product_linked.product_variant_ids.ids)]
-            }
-        }
-        return res

@@ -8,7 +8,7 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class productTemplate(models.Model):
+class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
     linked_product_line = fields.One2many('linked.product.line', 'product_template_id', string='Verlinkte Produkte')
@@ -16,7 +16,7 @@ class productTemplate(models.Model):
     is_starting_fees = fields.Boolean(string='Is starting Fees?')
 
 
-class productProduct(models.Model):
+class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     linked_product_line = fields.One2many('linked.product.line', 'product_id', string='Verlinkte Produkte')

@@ -2,8 +2,8 @@
 <odoo>
     <data>
          <!-- inherit product template form View -->
-        <record id="product_template_form_view_inherit_ollo_linked_product" model="ir.ui.view">
-            <field name="name">product.template.inherit</field>
+        <record id="product_normal_form_view_inherit_ollo_linked_product" model="ir.ui.view">
+            <field name="name">product.product.inherit</field>
             <field name="model">product.product</field>
             <field name="inherit_id" ref="product.product_normal_form_view"/>
             <field name="arch" type="xml">
@@ -14,7 +14,7 @@
                                 <field name="product_linked"/>
                                 <field name="is_abo_product"/>
                                 <field name="is_starting_fees" attrs="{'invisible': [('is_abo_product','=', True)]}"/>
-                                <field name="product_variant_id"/>
+                                <field name="product_variant_id" domain="[('product_tmpl_id', '=', product_linked)]"/>
                                 <field name="product_qty"/>
                             </tree>
                         </field>

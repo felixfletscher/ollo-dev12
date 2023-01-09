@@ -11,6 +11,13 @@ _logger = logging.getLogger(__name__)
 
 
 def create_subscription(self):
+    """
+    Creates a new subscription for the customer in Mollie.
+    Updates the subscription ID, status, next payment date, and Mollie created date for the current model record.
+
+    Returns:
+    - str: a notification message indicating the result of the subscription creation
+    """
     if self.subscription_id:
         notification = self._get_notification_message(
             message=f'Error, Subscription already created: {self.subscription_id}', message_type='danger')
@@ -20,23 +27,15 @@ def create_subscription(self):
     headers = {
         "Authorization": f"Bearer {self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')}"}
 
-    # Required
     data = {
         'amount': {'currency': self.partner_id.currency_id.name, 'value': f"{self.value:.2f}"},
         'interval':  self.interval_id.display_name,
         'description': self.description,
     }
-
-    # Optional
     if self.start_date: data['startDate'] = self.start_date.strftime('%Y-%m-%d')
-
-    _logger.info(str(data))
 
     response = requests.post(url, headers=headers, json=data)
     response_dict = response.json()
-
-    _logger.info(response.status_code)
-    _logger.info(response.text)
 
     if response.status_code == 201:
         for record in self:
@@ -52,6 +51,11 @@ def create_subscription(self):
 
 
 def update_subscription_data(self):
+    """
+       Update the subscription data for the given subscription record using the Mollie API.
+       If the update is successful, the subscription fields are set with the updated data.
+       If the update fails, a notification message is returned with the response from the Mollie API.
+    """
     if not self.subscription_id:
         notification = self._get_notification_message(message=f'Error, Subscription was not yet created.',
                                                       message_type='danger')
@@ -80,11 +84,8 @@ def update_subscription_data(self):
                 record.next_payment_date = None
                 record.mollie_canceled_at = datetime.strptime(response_dict['canceledAt'],
                                                               '%Y-%m-%dT%H:%M:%S+00:00')
-
-            # interval_mollie = response_dict['interval'].split(' ')
             interval_id = self.env.ref('ollo_mollie_integration.mollie_interval_1month')
-            # self.get_interval_type(response_dict['interval'], interval_mollie=interval_mollie)
-            record.interval_id = interval_id.id  # response_dict['interval']
+            record.interval_id = interval_id.id
         return self._get_notification_message(
             message=f"Subscription Data {response_dict['id']} successfully updated.", message_type='success')
     else:
@@ -93,6 +94,17 @@ def update_subscription_data(self):
 
 
 def update_subscription(self):
+    """Updates the subscription data for the current record in the model.
+
+        This function retrieves the subscription data from Mollie's API using the subscription ID
+        stored in the current record. If the API call is successful, it updates the values for
+        'value', 'description', 'status', 'mollie_created_at', 'next_payment_date', and 'interval_id'
+        in the current record. If the subscription has been canceled, it also updates the value for
+        'mollie_canceled_at'.
+
+        Returns:
+            str: A notification message indicating the outcome of the API call.
+        """
     if not self.subscription_id:
         notification = self._get_notification_message(message=f'Error, Subscription was not yet created.',
                                                       message_type='danger')
@@ -117,8 +129,6 @@ def update_subscription(self):
 
     if response.status_code == 200:
         for record in self:
-            # interval_mollie = response_dict['interval'].split(' ')
-            # interval_id = self.get_interval_type(response_dict['interval'], interval_mollie=interval_mollie)
             interval_id = self.env.ref('ollo_mollie_integration.mollie_interval_1month')
             record.interval_id = interval_id.id
             record.value = response_dict['amount']['value']
@@ -132,6 +142,11 @@ def update_subscription(self):
 
 
 def update_payments(self):
+    """
+       Update the payment data for the given subscription record using the Mollie API.
+       If the update is successful, payment records are created for each payment in the subscription.
+       If the update fails, a notification message is returned with the response from the Mollie API.
+    """
     if not self.subscription_id:
         notification = self._get_notification_message(message=f'Error, Subscription was not yet created.',
                                                       message_type='danger')
@@ -181,6 +196,12 @@ def update_payments(self):
 
 
 def cancel_subscription(self):
+    """
+       Cancel the given subscription record using the Mollie API.
+       If the cancellation is successful, the subscription's `status` field is set to 'canceled' and the
+       `mollie_canceled_at` field is set to the cancellation time.
+       If the cancellation fails, a notification message is returned with the response from the Mollie API.
+    """
     if not self.subscription_id:
         notification = self._get_notification_message(message=f'Error, Subscription was not yet created.',
                                                       message_type='danger')
@@ -234,8 +255,22 @@ class MollieSubscriptionsSubscription(models.Model):
 
     def get_interval_type(self, name, interval_mollie=[]):
         """
-            Get interval for subscription
-        """
+          Get the interval for a subscription.
+
+          If the interval with the given `name` is not found in the database, it will be created
+          with the values in `interval_mollie` if provided.
+
+          Args:
+              name (str): The display name of the interval to retrieve.
+              interval_mollie (list, optional): A list with two elements, the name and interval type
+                  for the interval to be created. Defaults to an empty list.
+
+          Returns:
+              mollie.interval: The interval record with the given `name`.
+
+          Raises:
+              ValueError: If `interval_mollie` is provided but does not have exactly two elements.
+          """
         interval_id = self.env['mollie.interval'].sudo().search([('display_name', '=', name)], limit=1)
         if interval_id:
             return interval_id
@@ -249,7 +284,10 @@ class MollieSubscriptionsSubscription(models.Model):
 
     def cron_create_customer_subscription(self):
         """
-            cron for create subscription
+          Create subscriptions for all partners that have a Mollie mandate.
+
+          This method should be called as a cron job. It will find all partners that have a Mollie mandate
+          and create subscriptions for them.
         """
         partner = self.env['res.partner'].search([
             ('mollie_mandate_id', '!=', False),

@@ -4,15 +4,11 @@ import logging
 from datetime import datetime, date
 
 from dateutil.relativedelta import relativedelta
-from odoo import fields, models, _, api
-from odoo.addons.ollo_mollie_integration.models.mollie import send_mollie_request
+from odoo import fields, models, api
+from odoo.addons.ollo_mollie_integration.utils.mollie import send_mollie_request
 from odoo.addons.payment_mollie.const import SUPPORTED_LOCALES
 from odoo.exceptions import ValidationError
-from odoo.tools import config
-from odoo.tools.float_utils import float_is_zero
-from psycopg2.extensions import TransactionRollbackError
 
-_logger = logging.getLogger(__name__)
 _logger = logging.getLogger(__name__)
 
 
@@ -22,94 +18,29 @@ class SaleOrder(models.Model):
     mollie_subscription_line = fields.One2many('molliesubscriptions.subscription', 'order_id')
     abo_delivery_count = fields.Integer(compute="compute_abo_delivery", copy=False, default=0)
     is_abo_sale_order = fields.Boolean('Abo sale order', default=False, compute="compute_abo_order", store=True)
+    cirf_result = fields.Selection([
+        ('normal', 'Normal'),
+        ('done', 'Success'),
+        ('blocked', 'Fail')], string='CIRF result', default='normal')
 
     @api.depends('order_line')
     def compute_abo_order(self):
+        """
+            Check if the sale order contains a product from the ABO product line, and
+            set the `is_abo_sale_order` field to True if it does.
+        """
         for rec in self:
             abo_product_line = rec.order_line.filtered(
                 lambda x: x.product_id.linked_product_line.filtered(lambda x: x.is_abo_product))
             if abo_product_line:
                 rec.is_abo_sale_order = True
 
-
-
-    # mollie_subscription_id = fields.Char(related='mollie_id.subscription_id')
-    cirf_result = fields.Selection([
-        ('normal', 'Normal'),
-        ('done', 'Success'),
-        ('blocked', 'Fail')], string='CIRF result', default='normal')
-
-    def action_create_delivery(self):
-        """
-            create abbo product delivery
-        """
-        for rec in self:
-            abo_delivery_count = self.env['stock.picking'].sudo().search_count(
-                [('abo_sale_id', '=', rec.id), ('is_abo_picking', '=', True), ('state', '!=', 'cancel')])
-            if abo_delivery_count == 0:
-                stock_move = self.env['stock.move']
-                # Create an empty list to store stock moves
-                product_list = []
-                # Find the default picking type for outgoing shipments
-                picking_type_id = self.env['stock.picking.type'].sudo().search(
-                    [('code', '=', 'outgoing'), ('company_id', '=', self.company_id.id)], limit=1)
-                # Loop through the order lines
-                for rec in self.order_line:
-                    # Loop through the linked products of the current order line product
-                    for record in rec.product_id.linked_product_line.filtered(lambda x: x.is_abo_product):
-                        # Create a stock move for the current linked product
-                        move_vals = {
-                            'product_id': record.product_variant_id.id,
-                            'product_uom_qty': record.product_qty * rec.product_uom_qty,
-                            'location_id': picking_type_id.default_location_src_id.id,
-                            'name': _('Auto processed move : %s') % record.product_variant_id.display_name,
-                            'location_dest_id': self.env.ref('stock.stock_location_customers').sudo().id
-                        }
-                        values = stock_move.create(move_vals)
-                        # Add the created stock move to the product list
-                        product_list.append(values.id)
-                # If there are any products in the list, create a picking for them
-                if product_list:
-                    self.create_picking(product_list)
-
-    def create_picking(self, product_list):
-        """This static method will confirm the sale
-         order and this will also validate the picking"""
-        picking_type_id = self.env['stock.picking.type'].sudo().search(
-            [('code', '=', 'outgoing'), ('company_id', '=', self.company_id.id)], limit=1)
-        picking = self.env['stock.picking'].sudo().create({
-            'is_abo_picking': True,
-            'location_dest_id': self.env.ref('stock.stock_location_customers').sudo().id,
-            'location_id': picking_type_id.default_location_src_id.id,
-            'move_ids_without_package': [(6, 0, product_list)],
-            'move_type': 'direct',
-            'origin': self.name,
-            'partner_id': self.partner_id.id,
-            'picking_type_id': picking_type_id.id,
-            'state': 'assigned',
-            'abo_sale_id': self.id,
-        })
-        # self.write({'picking_ids': [(4, picking.id)]})
-
-    # abo view abo delivery
-    def action_view_abo_delivery(self):
-        """
-            action for view abo delivery
-        """
-        self.ensure_one()
-        action = {
-            'name': 'Abo Delivery',
-            'view_mode': 'tree,form',
-            'res_model': 'stock.picking',
-            'type': 'ir.actions.act_window',
-            'domain': [('abo_sale_id', '=', self.id), ('is_abo_picking', '=', True)]
-        }
-        return action
-
-    # abo delivery count
     def compute_abo_delivery(self):
         """
-            get abo delivery count
+           Compute the number of deliveries made for this subscription sale.
+
+           A delivery is counted if it is associated with this subscription sale and is marked as an 'abo_picking'.
+           The count of such deliveries is stored in the 'abo_delivery_count' field of this record.
         """
         for rec in self:
             abo_delivery_count = self.env['stock.picking'].sudo().search_count(
@@ -126,20 +57,6 @@ class SaleOrder(models.Model):
     def action_run_crif_check(self):
         pass
 
-    def action_view_subscription(self):
-        """
-            smart button for show customer subscription
-        """
-        self.ensure_one()
-        action = {
-            'name': 'Mollie Subscription',
-            'view_mode': 'tree,form',
-            'res_model': 'molliesubscriptions.subscription',
-            'type': 'ir.actions.act_window',
-            'domain': [('order_id', '=', self.id)]
-        }
-        return action
-
     # override base method for hide abo delivery count
     @api.depends('picking_ids')
     def _compute_picking_ids(self):
@@ -149,21 +66,14 @@ class SaleOrder(models.Model):
         for order in self:
             order.delivery_count = len(order.picking_ids.filtered(lambda picking: not picking.is_abo_picking))
 
-    # @api.depends('is_subscription', 'state', 'start_date', 'subscription_management', 'date_order')
-    # def _compute_next_invoice_date(self):
-    #     """
-    #         add buffer days in next invoice date
-    #     """
-    #     super(SaleOrder, self)._compute_next_invoice_date()
-    #     buffer_days = self.env['ir.config_parameter'].sudo().get_param('ollo_mollie_integration.buffer_days')
-    #     converted_num = int(buffer_days)
-    #
-    #     for rec in self:
-    #         rec.next_invoice_date = rec.start_date or fields.Date.today()
-    #         if converted_num > 0:
-    #             rec.next_invoice_date = rec.next_invoice_date + timedelta(converted_num)
-
     def update_subscription(self):
+        """
+           Update the interval of the active subscription associated with this subscription sale.
+
+           The interval is set to '1 months'.
+           If the subscription is not found or there is an error in the process, the method logs the error
+           and continues.
+        """
         try:
             subscription = self.mollie_subscription_line.filtered(lambda x: x.status == 'active')
             if subscription:
@@ -183,7 +93,16 @@ class SaleOrder(models.Model):
         return True
 
     def get_subscription_payment(self):
-        self.update_subscription()
+        """
+           Retrieve and process the payments made for the active subscription associated with this subscription sale.
+
+           If a payment is found, it is checked to see if it was made within the current month. If it was, a payment
+           record
+           is created in the system, and the associated invoice (if any) is marked as paid.
+           If the subscription is not found or there is an error in the process, the method logs the error and
+           continues.
+        """
+        # self.update_subscription()
         subscription = self.mollie_subscription_line.filtered(lambda x: x.status == 'active')
         if subscription:
             mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
@@ -240,6 +159,15 @@ class SaleOrder(models.Model):
 
     @api.model
     def cron_create_subscription_payment(self):
+        """
+               Retrieve and process the payments made for the subscriptions of all sale orders that meet the
+               following conditions:
+               - have a recurrence
+               - are associated with a Mollie subscription
+               - have a posted invoice that is not yet paid
+
+               This method is intended to be run as a cron job.
+        """
         sale_order_ids = self.env['sale.order'].search(
             [('recurrence_id', '!=', False), ('mollie_subscription_line', '!=', False),
              ('invoice_ids.state', '=', 'posted'), ('invoice_ids.payment_state', '!=', 'paid')])
@@ -247,32 +175,40 @@ class SaleOrder(models.Model):
             order.get_subscription_payment()
 
     def create_recharge_invoice(self):
-        invoice_ids = self._create_recurring_invoice()
-        sale_line = self.env['sale.order.line'].search(
-            [('id', 'not in', invoice_ids.invoice_line_ids.sale_line_ids.ids), ('order_id', '=', self.id)])
-        vals = {}
-        for line in sale_line:
-            vals.update({
-                'product_id': line.product_id.id,
-                'price_unit': line.price_unit,
-                'tax_ids': [fields.Command.set(line.tax_id.ids)],
-                'quantity': line.product_uom_qty,
-                'name': line.name,
-                'discount': line.discount,
-            })
+        """
+           Create invoices and mark them as recharge invoices.
+
+           A recharge invoice is a special type of invoice that is used to recharge the customer's account balance.
+           The invoices created by this method will be marked as recharge invoices and their invoice type will be set to 'Recharge Invoice'.
+
+           Returns:
+               list[int]: A list of the created invoice ids.
+        """
+        invoice_ids = self._create_invoices()
         invoice_ids.write({
             'is_recharge_invoice': True,
             'invoice_type': 'Recharge Invoice',
-            'invoice_line_ids': [fields.Command.create(vals)],
         })
 
     def create_customer_recharge(self):
+        """
+           Create a customer recharge using Mollie API.
+           The recharge will be based on the order lines in self and the amount will be
+          the sum of their subtotals and taxes.
+           The recharge will be associated with the partner in self.
+           The description of the recharge will be "Recharge - Partner Name".
+           The locale for the recharge will be based on the current context's 'lang' value, or default to
+            'en_US' if the 'lang' value is not supported.
+           If the Mollie API key is not found or the request to Mollie API fails, a ValidationError will be raised.
+           If the request to Mollie API is successful, a message will be posted on self with the details of
+           the recharge.
+        """
+        mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
+        url = 'https://api.mollie.com/v2/payments'
+        if not mollie_key:
+            raise ValidationError("Mollie Api Key not Found.")
+        response = send_mollie_request(url, mollie_key)
         try:
-            mollie_key = self.env['ir.config_parameter'].sudo().get_param('molliesubscriptions.mollie_api_key')
-            url = 'https://api.mollie.com/v2/payments'
-            if not mollie_key:
-                raise ValidationError("Mollie Api Key not Found.")
-            response = send_mollie_request(url, mollie_key)
             if response and response.get('status_code', False) == 200:
                 line_ids = self.order_line.filtered(lambda x: not x.is_starting_fees)
                 value = sum(line_ids.mapped('price_subtotal')) + sum(line_ids.mapped('price_tax'))
@@ -288,6 +224,7 @@ class SaleOrder(models.Model):
                     "locale": user_lang if user_lang in SUPPORTED_LOCALES else 'en_US',
                 }
                 response = send_mollie_request(url, mollie_key, data=json.dumps(data))
+                print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",response)
                 if response and response.get('status_code', False) == 201:
                     message = {
                         'value': response['data']['amount']['value'],
@@ -302,3 +239,4 @@ class SaleOrder(models.Model):
         except Exception as error:
             _logger.exception(error)
         return True
+

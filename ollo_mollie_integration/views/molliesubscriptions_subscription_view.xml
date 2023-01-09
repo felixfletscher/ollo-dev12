@@ -7,6 +7,11 @@
             <field name="model">molliesubscriptions.subscription</field>
             <field name="inherit_id" ref="molliesubscriptions.molliesubscriptions_subscription_view_form"/>
             <field name="arch" type="xml">
+                <xpath expr="//form" position="attributes">
+                    <attribute name="edit">false</attribute>
+                    <attribute name="create">false</attribute>
+                    <attribute name="delete">false</attribute>
+                </xpath>
                 <xpath expr="//field[@name='customer_id']" position="before">
                     <field name="partner_id"/>
                 </xpath>
@@ -15,12 +20,16 @@
                 </xpath>
             </field>
         </record>
-         <!-- Inherit molliesubscription tree View -->
+        <!-- Inherit molliesubscription tree View -->
         <record id="molliesubscriptions_subscription_view_tree_inherit" model="ir.ui.view">
             <field name="name">molliesubscriptions.subscription.view.tree.inherit</field>
             <field name="model">molliesubscriptions.subscription</field>
             <field name="inherit_id" ref="molliesubscriptions.molliesubscriptions_subscription_view_tree"/>
             <field name="arch" type="xml">
+                <xpath expr="//tree" position="attributes">
+                    <attribute name="create">false</attribute>
+                    <attribute name="delete">false</attribute>
+                </xpath>
                 <xpath expr="//field[@name='interval']" position="replace">
                     <field name="interval_id" string="Interval"/>
                 </xpath>

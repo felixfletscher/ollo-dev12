@@ -15,20 +15,17 @@
                     <button name="create_recharge_invoice" type="object" string="Recharge Invoice"
                             class="btn btn-primary"
                             attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}"/>
-                    <button name="action_create_delivery" type="object" string="Create Abo WH/Out"
-                            class="btn btn-primary"
-                            attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}"/>
                 </xpath>
-                <xpath expr="//div[@name='button_box']" position="inside">
-                    <button name="action_view_abo_delivery" type="object" class="oe_stat_button" icon="fa-truck"
-                            attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}">
-                        <field name="abo_delivery_count" widget="statinfo" string="Abo Delivery"/>
-                    </button>
-                    <button name="action_view_subscription" type="object" class="oe_stat_button" icon="fa-usd"
-                            attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}"
-                            string="Mollie Subscription">
-                    </button>
-                </xpath>
+<!--                <xpath expr="//div[@name='button_box']" position="inside">-->
+<!--                    <button name="action_view_abo_delivery" type="object" class="oe_stat_button" icon="fa-truck"-->
+<!--                            attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}">-->
+<!--                        <field name="abo_delivery_count" widget="statinfo" string="Abo Delivery"/>-->
+<!--                    </button>-->
+<!--&lt;!&ndash;                    <button name="action_view_subscription" type="object" class="oe_stat_button" icon="fa-usd"&ndash;&gt;-->
+<!--&lt;!&ndash;                            attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}"&ndash;&gt;-->
+<!--&lt;!&ndash;                            string="Mollie Subscription">&ndash;&gt;-->
+<!--&lt;!&ndash;                    </button>&ndash;&gt;-->
+<!--                </xpath>-->
                 <xpath expr="//field[@name='order_line']//tree//field[@name='name']" position="after">
                     <field name="is_starting_fees" invisible="1"/>
                 </xpath>

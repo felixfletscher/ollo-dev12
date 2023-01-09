@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit sale order form view -->
+    <record id="view_order_form_inherit_sub_saleorder" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="is_abo_source_sale_order" invisible="1"/>
+                <field name="is_abo_sale_order" invisible="1"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <field name="is_abo_source_sale_order" invisible="1"/>
+                <button name="action_view_abo_delivery" type="object" class="oe_stat_button" icon="fa-truck"
+                        attrs="{'invisible': ['|', '|', ('state', '!=', 'sale'),('is_abo_sale_order','=',False),
+                            ('is_abo_source_sale_order', '=', True)]}">
+                    <field name="abo_delivery_count" widget="statinfo" string="Abo Delivery"/>
+                </button>
+                <button name="action_open_subsale_order" type="object" class="oe_stat_button" icon="fa-pencil-square-o"
+                        attrs="{'invisible': [('subsale_order_count', '=', 0)]}">
+                    <field name="subsale_order_count" widget="statinfo" string="Odoo Subscriptions"/>
+                </button>
+                <button name="action_open_source_sale_order" type="object" class="oe_stat_button"
+                        icon="fa-pencil-square-o" attrs="{'invisible': [('source_sale_order_count', '=', 0)]}">
+                    <field name="source_sale_order_count" widget="statinfo" string="Source Sale Order"/>
+                </button>
+                <button name="action_view_subscription" type="object" class="oe_stat_button" icon="fa-usd"
+                        attrs="{'invisible': ['|',('state', '!=', 'sale'),('is_abo_sale_order','=',False)]}"
+                        string="Mollie Subscription">
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit sale order (subscription) form view -->
+    <record id="sale_subscription_order_view_form_inherit_ollo" model="ir.ui.view">
+        <field name="name">sale.subscription.order.form.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_subscription.sale_subscription_order_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="is_abo_sale_order" invisible="1"/>
+                <field name="is_abo_source_sale_order" invisible="1"/>
+                <button name="action_create_delivery" type="object" string="Create Abo WH/Out"
+                        class="btn btn-primary"
+                        attrs="{'invisible': ['|', '|', ('state', '!=', 'sale'),('is_abo_sale_order','=',False),
+                        ('is_abo_source_sale_order', '=', True)]}"/>
+            </xpath>
+            <xpath expr="//label[@name='recurrence_label']" position="attributes">
+                <attribute name="attrs">{'invisible': [('is_abo_source_sale_order', '=', True)]}</attribute>
+            </xpath>
+            <xpath expr="//div[@name='recurrence_block']" position="attributes">
+                <attribute name="attrs">{'invisible': [('is_abo_source_sale_order', '=', True)]}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='next_invoice_date'][1]" position="attributes">
+                <attribute name="attrs">{
+                    'invisible': ['|', '|', ('stage_category', 'not in', ['progress', 'paused']) ,
+                    ('recurrence_id', '=', False), ('is_abo_source_sale_order', '=', True)],
+                    'required': [('recurrence_id', '!=', False), ('state', 'in', ['sale', 'done']),
+                    ('is_abo_source_sale_order', '=', False)],
+                    'readonly': 1,
+                    }
+                </attribute>
+            </xpath>
+            <xpath expr="//field[@name='next_invoice_date'][2]" position="attributes">
+                <attribute name="attrs">{
+                    'invisible': ['|', '|', ('stage_category', 'not in', ['progress', 'paused']) ,
+                    ('recurrence_id', '=', False), ('is_abo_source_sale_order', '=', True)],
+                    'required': [('recurrence_id', '!=', False), ('state', 'in', ['sale', 'done']),
+                    ('is_abo_source_sale_order', '=', False)],
+                    }
+                </attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_invoice_subscription'][1]" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|', ('show_rec_invoice_button', '=', False),
+                    ('invoice_status', '=', 'no'), ('is_abo_source_sale_order', '=', True)]}
+                </attribute>
+            </xpath>
+            <xpath expr="//button[@name='action_invoice_subscription'][2]" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|', ('show_rec_invoice_button', '=', False),
+                    ('invoice_status', '=', 'to invoice'), ('is_abo_source_sale_order', '=', True)]}
+                </attribute>
+            </xpath>
+        </field>
+
+    </record>
+</odoo>

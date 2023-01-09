@@ -9,10 +9,6 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='partner_lang']" position="after">
                     <field name="mollie_payment_method"/>
-                    <field name="customer_account"/>
-                    <field name="card_number"/>
-                    <field name="paypal_agreement"/>
-                    <field name="customer_bic"/>
                 </xpath>
             </field>
         </record>
